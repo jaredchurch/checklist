@@ -227,42 +227,55 @@ function registerControls() {
   const exportBtn = document.getElementById('export');
   const importInput = document.getElementById('import');
 
-  !addRootItem || addRootItem.addEventListener('click', () => {
-    nodesRaw.push(createNode());
-    saveData(nodesRaw);
-    render();
-  });
+  if (addRootItem) {
+    addRootItem.addEventListener('click', () => {
+      console.log('addRootItem clicked');
+      nodesRaw.push(createNode());
+      saveData(nodesRaw);
+      render();
+    });
+  }
 
-  !addRootList || addRootList.addEventListener('click', () => {
-    nodesRaw.push(createListNode());
-    saveData(nodesRaw);
-    render();
-  });
+  if (addRootList) {
+    addRootList.addEventListener('click', () => {
+      console.log('addRootList clicked');
+      nodesRaw.push(createListNode());
+      saveData(nodesRaw);
+      render();
+    });
+  }
 
-  !markAllDone || markAllDone.addEventListener('click', () => {
-    setTreeDone(nodesRaw, true, true);
-    saveData(nodesRaw);
-    render();
-  });
+  if (markAllDone) {
+    markAllDone.addEventListener('click', () => {
+      setTreeDone(nodesRaw, true, true);
+      saveData(nodesRaw);
+      render();
+    });
+  }
 
-  !markAllNotDone || markAllNotDone.addEventListener('click', () => {
-    setTreeDone(nodesRaw, false, true);
-    saveData(nodesRaw);
-    render();
-  });
+  if (markAllNotDone) {
+    markAllNotDone.addEventListener('click', () => {
+      setTreeDone(nodesRaw, false, true);
+      saveData(nodesRaw);
+      render();
+    });
+  }
 
-  !exportBtn || exportBtn.addEventListener('click', () => {
-    const dataString = JSON.stringify(nodesRaw, null, 2);
-    const blob = new Blob([dataString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'checklist-backup.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const dataString = JSON.stringify(nodesRaw, null, 2);
+      const blob = new Blob([dataString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'checklist-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
 
-  !importInput || importInput.addEventListener('change', async (evt) => {
+  if (importInput) {
+    importInput.addEventListener('change', async (evt) => {
     const file = evt.target.files?.[0];
     if (!file) return;
     try {
@@ -278,6 +291,7 @@ function registerControls() {
       console.error(error);
     }
   });
+  }
 }
 
 async function fetchCommitInfo() {
