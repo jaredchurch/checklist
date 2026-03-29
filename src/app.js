@@ -280,10 +280,33 @@ function registerControls() {
   });
 }
 
+async function fetchCommitInfo() {
+  const el = document.getElementById('commit-info');
+  if (!el) return;
+
+  const repoOwner = 'jaredchurch';
+  const repoName = 'checklist';
+  const branch = 'main';
+  const url = `https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`GitHub API ${response.status}`);
+    const commit = await response.json();
+    const hash = commit.sha.slice(0, 7);
+    const date = new Date(commit.commit.committer.date).toLocaleString();
+    el.textContent = `Commit ${hash} @ ${date}`;
+  } catch (err) {
+    console.warn('Failed to load commit info', err);
+    el.textContent = 'Commit info unavailable';
+  }
+}
+
 function init() {
   document.title = 'Checklist PWA';
   registerControls();
   render();
+  fetchCommitInfo();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').then(() => {
