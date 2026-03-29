@@ -26,12 +26,18 @@ function createListNode(title = 'New list') {
 function getData() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (!raw) return createListNode('Root');
+    const parsed = JSON.parse(raw);
+    // Ensure it's a list node
+    if (parsed.type !== 'list') {
+      console.warn('Invalid root data, resetting to default');
+      return createListNode('Root');
+    }
+    return parsed;
   } catch (err) {
     console.error('Invalid saved data', err);
     localStorage.removeItem(KEY);
-    return [];
+    return createListNode('Root');
   }
 }
 
@@ -39,22 +45,22 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-function findNodeById(nodes, id) {
-  for (const n of nodes) {
-    if (n.id === id) return n;
-    const found = findNodeById(n.children, id);
+function findNodeById(root, id) {
+  if (root.id === id) return root;
+  for (const n of root.children) {
+    const found = findNodeById(n, id);
     if (found) return found;
   }
   return null;
 }
 
-function updateNode(nodes, id, callback) {
-  for (const n of nodes) {
-    if (n.id === id) {
-      callback(n);
-      return true;
-    }
-    if (updateNode(n.children, id, callback)) return true;
+function updateNode(root, id, callback) {
+  if (root.id === id) {
+    callback(root);
+    return true;
+  }
+  for (const n of root.children) {
+    if (updateNode(n, id, callback)) return true;
   }
   return false;
 }
@@ -121,11 +127,7 @@ function renderTree(nodes, container, level = 0) {
     addChildItem.textContent = '+Item';
     addChildItem.className = 'small-button';
     addChildItem.addEventListener('click', () => {
-      if (node.type === 'list') {
-        node.children.push(createNode());
-      } else {
-        node.children.push(createNode());
-      }
+      node.children.push(createNode());
       saveData(nodesRaw);
       render();
     });
@@ -144,7 +146,7 @@ function renderTree(nodes, container, level = 0) {
     removeButton.className = 'small-button';
     removeButton.addEventListener('click', () => {
       const parent = findParent(nodesRaw, node.id);
-      const array = parent ? parent.children : nodesRaw;
+      const array = parent ? parent.children : nodesRaw.children;
       const idx = array.findIndex((c) => c.id === node.id);
       if (idx !== -1) {
         array.splice(idx, 1);
@@ -175,7 +177,7 @@ function renderTree(nodes, container, level = 0) {
     thisLevelDone.textContent = 'Level Done';
     thisLevelDone.className = 'small-button';
     thisLevelDone.addEventListener('click', () => {
-      setLevelDone(nodesRaw, level, true);
+      setLevelDone(nodes, level, true);
       saveData(nodesRaw);
       render();
     });
@@ -184,12 +186,16 @@ function renderTree(nodes, container, level = 0) {
     thisLevelNotDone.textContent = 'Level Not Done';
     thisLevelNotDone.className = 'small-button';
     thisLevelNotDone.addEventListener('click', () => {
-      setLevelDone(nodesRaw, level, false);
+      setLevelDone(nodes, level, false);
       saveData(nodesRaw);
       render();
     });
 
-    wrapper.append(checkbox, titleInput, addChildItem, addChildList, removeButton, childDoneAll, childNotDoneAll, thisLevelDone, thisLevelNotDone);
+    const elements = [checkbox, titleInput, removeButton, childDoneAll, childNotDoneAll, thisLevelDone, thisLevelNotDone];
+    if (node.type === 'list') {
+      elements.push(addChildItem, addChildList);
+    }
+    wrapper.append(...elements);
     li.appendChild(wrapper);
 
     if (node.children.length > 0) {
@@ -202,10 +208,10 @@ function renderTree(nodes, container, level = 0) {
   container.appendChild(ul);
 }
 
-function findParent(nodes, childId, parent = null) {
-  for (const node of nodes) {
-    if (node.id === childId) return parent;
-    const found = findParent(node.children, childId, node);
+function findParent(root, childId, parent = null) {
+  if (root.id === childId) return parent;
+  for (const node of root.children) {
+    const found = findParent(node, childId, root);
     if (found) return found;
   }
   return null;
@@ -216,38 +222,18 @@ let nodesRaw = getData();
 function render() {
   const container = document.getElementById('tree');
   if (!container) return;
-  renderTree(nodesRaw, container);
+  renderTree(nodesRaw.children, container);
 }
 
 function registerControls() {
-  const addRootItem = document.getElementById('add-root-item');
-  const addRootList = document.getElementById('add-root-list');
   const markAllDone = document.getElementById('mark-all-done');
   const markAllNotDone = document.getElementById('mark-all-not-done');
   const exportBtn = document.getElementById('export');
   const importInput = document.getElementById('import');
 
-  if (addRootItem) {
-    addRootItem.addEventListener('click', () => {
-      console.log('addRootItem clicked');
-      nodesRaw.push(createNode());
-      saveData(nodesRaw);
-      render();
-    });
-  }
-
-  if (addRootList) {
-    addRootList.addEventListener('click', () => {
-      console.log('addRootList clicked');
-      nodesRaw.push(createListNode());
-      saveData(nodesRaw);
-      render();
-    });
-  }
-
   if (markAllDone) {
     markAllDone.addEventListener('click', () => {
-      setTreeDone(nodesRaw, true, true);
+      setTreeDone(nodesRaw.children, true, true);
       saveData(nodesRaw);
       render();
     });
@@ -255,7 +241,7 @@ function registerControls() {
 
   if (markAllNotDone) {
     markAllNotDone.addEventListener('click', () => {
-      setTreeDone(nodesRaw, false, true);
+      setTreeDone(nodesRaw.children, false, true);
       saveData(nodesRaw);
       render();
     });
@@ -276,13 +262,12 @@ function registerControls() {
 
   if (importInput) {
     importInput.addEventListener('change', async (evt) => {
-    const file = evt.target.files?.[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const imported = JSON.parse(text);
-      if (!Array.isArray(imported)) throw new Error('Invalid file format');
-      nodesRaw = imported;
+      const file = evt.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
       saveData(nodesRaw);
       render();
       importInput.value = '';

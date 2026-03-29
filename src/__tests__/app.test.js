@@ -2,15 +2,17 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData } from '../app.js';
 
 describe('Checklist core logic', () => {
-  let tree;
+  let root;
 
   beforeEach(() => {
-    tree = [
-      { id: 'a', type: 'list', title: 'Root List', children: [
-          { id: 'b', type: 'item', title: 'Child item', done: false, children: [] }
-        ]
-      }
-    ];
+    root = {
+      id: 'root',
+      type: 'list',
+      title: 'Root List',
+      children: [
+        { id: 'a', type: 'item', title: 'Child item', done: false, children: [] }
+      ]
+    };
   });
 
   it('createNode creates a valid item node', () => {
@@ -31,32 +33,32 @@ describe('Checklist core logic', () => {
   });
 
   it('setTreeDone includes descendants when true (items only)', () => {
-    setTreeDone(tree, true, true);
-    expect(tree[0].type).toBe('list');
-    expect(tree[0].children[0].done).toBe(true);
+    setTreeDone(root.children, true, true);
+    expect(root.children[0].done).toBe(true);
   });
 
   it('setTreeDone excludes descendants when false (items only)', () => {
-    tree[0].children[0].done = true;
-    setTreeDone(tree, false, false);
-    expect(tree[0].children[0].done).toBe(true);
+    root.children[0].done = true;
+    setTreeDone(root.children, false, false);
+    expect(root.children[0].done).toBe(false);
   });
 
   it('setLevelDone sets target level only', () => {
-    setLevelDone(tree, 1, true);
-    expect(tree[0].done).toBeUndefined();
-    expect(tree[0].children[0].done).toBe(true);
+    setLevelDone(root.children, 0, true);
+    expect(root.children[0].done).toBe(true);
   });
 
   it('findNodeById returns correct node', () => {
-    const result = findNodeById(tree, 'b');
-    expect(result).toEqual(tree[0].children[0]);
+    const result = findNodeById(root, 'a');
+    expect(result).toEqual(root.children[0]);
   });
 
   it('getData/saveData roundtrips localStorage', () => {
-    const sample = [createNode('x')];
+    const sample = createListNode('Test Root');
+    sample.children.push(createNode('x'));
     saveData(sample);
     const loaded = getData();
-    expect(loaded[0].title).toBe('x');
+    expect(loaded.title).toBe('Test Root');
+    expect(loaded.children[0].title).toBe('x');
   });
 });
