@@ -207,7 +207,7 @@ function renderTree(nodes, container, level = 0) {
       });
 
       const childDoneAll = document.createElement('button');
-      childDoneAll.textContent = 'This+Descendants Done';
+      childDoneAll.textContent = 'Descendants Done';
       childDoneAll.addEventListener('click', () => {
         setTreeDone([node], true, true);
         saveData(nodesRaw);
@@ -215,7 +215,7 @@ function renderTree(nodes, container, level = 0) {
       });
 
       const childNotDoneAll = document.createElement('button');
-      childNotDoneAll.textContent = 'This+Descendants Not Done';
+      childNotDoneAll.textContent = 'Descendants Not Done';
       childNotDoneAll.addEventListener('click', () => {
         setTreeDone([node], false, true);
         saveData(nodesRaw);
