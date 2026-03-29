@@ -123,7 +123,60 @@ function renderTree(nodes, container, level = 0) {
       render();
     });
 
-    const elements = [checkbox, titleInput, removeButton, childDoneAll, childNotDoneAll, thisLevelDone, thisLevelNotDone];
+    const removeButton = document.createElement('button');
+    removeButton.textContent = 'Delete';
+    removeButton.className = 'small-button';
+    removeButton.addEventListener('click', () => {
+      const parent = findParent(nodesRaw, node.id);
+      const array = parent ? parent.children : nodesRaw.children;
+      const idx = array.findIndex((c) => c.id === node.id);
+      if (idx !== -1) {
+        array.splice(idx, 1);
+        saveData(nodesRaw);
+        render();
+      }
+    });
+
+    const childDoneAll = document.createElement('button');
+    childDoneAll.textContent = 'This+Descendants Done';
+    childDoneAll.className = 'small-button';
+    childDoneAll.addEventListener('click', () => {
+      setTreeDone([node], true, true);
+      saveData(nodesRaw);
+      render();
+    });
+
+    const childNotDoneAll = document.createElement('button');
+    childNotDoneAll.textContent = 'This+Descendants Not Done';
+    childNotDoneAll.className = 'small-button';
+    childNotDoneAll.addEventListener('click', () => {
+      setTreeDone([node], false, true);
+      saveData(nodesRaw);
+      render();
+    });
+
+    const thisLevelDone = document.createElement('button');
+    thisLevelDone.textContent = 'Level Done';
+    thisLevelDone.className = 'small-button';
+    thisLevelDone.addEventListener('click', () => {
+      setTreeDone(node.children, true, false);
+      saveData(nodesRaw);
+      render();
+    });
+
+    const thisLevelNotDone = document.createElement('button');
+    thisLevelNotDone.textContent = 'Level Not Done';
+    thisLevelNotDone.className = 'small-button';
+    thisLevelNotDone.addEventListener('click', () => {
+      setTreeDone(node.children, false, false);
+      saveData(nodesRaw);
+      render();
+    });
+
+    const elements = [checkbox, titleInput, removeButton, childDoneAll, childNotDoneAll];
+    if (level > 0) {
+      elements.push(thisLevelDone, thisLevelNotDone);
+    }
     if (node.type === 'list') {
       const addChildItem = document.createElement('button');
       addChildItem.textContent = '+Item';
@@ -172,7 +225,7 @@ let nodesRaw = getData();
 function render() {
   const container = document.getElementById('tree');
   if (!container) return;
-  renderTree(nodesRaw.children, container);
+  renderTree([nodesRaw], container);
 }
 
 function registerControls() {
