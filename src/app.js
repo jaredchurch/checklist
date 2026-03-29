@@ -23,6 +23,22 @@ function createListNode(title = 'New list') {
   };
 }
 
+function sanitizeTree(node) {
+  if (node.type === 'item') {
+    node.children = [];
+    if (typeof node.done !== 'boolean') node.done = false;
+    return node;
+  }
+
+  if (node.type === 'list') {
+    node.children = Array.isArray(node.children) ? node.children.map(sanitizeTree) : [];
+    return node;
+  }
+
+  // fallback if malformed node type is encountered
+  return createListNode(node.title || 'Root');
+}
+
 function getData() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -33,7 +49,7 @@ function getData() {
       console.warn('Invalid root data, resetting to default');
       return createListNode('Root');
     }
-    return parsed;
+    return sanitizeTree(parsed);
   } catch (err) {
     console.error('Invalid saved data', err);
     localStorage.removeItem(KEY);
@@ -69,8 +85,11 @@ function setTreeDone(nodes, done, includeDescendants = true) {
   for (const n of nodes) {
     if (n.type === 'item') {
       n.done = done;
+      // items are leaf nodes by definition and should not propagate to children
+      continue;
     }
-    if (includeDescendants) {
+    // lists may have children that can be checked as items
+    if (includeDescendants && n.type === 'list') {
       setTreeDone(n.children, done, true);
     }
   }
@@ -86,7 +105,9 @@ function setLevelDone(nodes, level, done) {
     return;
   }
   for (const n of nodes) {
-    setLevelDone(n.children, level - 1, done);
+    if (n.type === 'list') {
+      setLevelDone(n.children, level - 1, done);
+    }
   }
 }
 
@@ -137,47 +158,50 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const childDoneAll = document.createElement('button');
-    childDoneAll.textContent = 'This+Descendants Done';
-    childDoneAll.className = 'small-button';
-    childDoneAll.addEventListener('click', () => {
-      setTreeDone([node], true, true);
-      saveData(nodesRaw);
-      render();
-    });
+    const elements = [checkbox, titleInput, removeButton];
 
-    const childNotDoneAll = document.createElement('button');
-    childNotDoneAll.textContent = 'This+Descendants Not Done';
-    childNotDoneAll.className = 'small-button';
-    childNotDoneAll.addEventListener('click', () => {
-      setTreeDone([node], false, true);
-      saveData(nodesRaw);
-      render();
-    });
-
-    const thisLevelDone = document.createElement('button');
-    thisLevelDone.textContent = 'Level Done';
-    thisLevelDone.className = 'small-button';
-    thisLevelDone.addEventListener('click', () => {
-      setTreeDone(node.children, true, false);
-      saveData(nodesRaw);
-      render();
-    });
-
-    const thisLevelNotDone = document.createElement('button');
-    thisLevelNotDone.textContent = 'Level Not Done';
-    thisLevelNotDone.className = 'small-button';
-    thisLevelNotDone.addEventListener('click', () => {
-      setTreeDone(node.children, false, false);
-      saveData(nodesRaw);
-      render();
-    });
-
-    const elements = [checkbox, titleInput, removeButton, childDoneAll, childNotDoneAll];
-    if (level > 0) {
-      elements.push(thisLevelDone, thisLevelNotDone);
-    }
     if (node.type === 'list') {
+      const childDoneAll = document.createElement('button');
+      childDoneAll.textContent = 'This+Descendants Done';
+      childDoneAll.className = 'small-button';
+      childDoneAll.addEventListener('click', () => {
+        setTreeDone([node], true, true);
+        saveData(nodesRaw);
+        render();
+      });
+
+      const childNotDoneAll = document.createElement('button');
+      childNotDoneAll.textContent = 'This+Descendants Not Done';
+      childNotDoneAll.className = 'small-button';
+      childNotDoneAll.addEventListener('click', () => {
+        setTreeDone([node], false, true);
+        saveData(nodesRaw);
+        render();
+      });
+
+      const thisLevelDone = document.createElement('button');
+      thisLevelDone.textContent = 'Level Done';
+      thisLevelDone.className = 'small-button';
+      thisLevelDone.addEventListener('click', () => {
+        setTreeDone(node.children, true, false);
+        saveData(nodesRaw);
+        render();
+      });
+
+      const thisLevelNotDone = document.createElement('button');
+      thisLevelNotDone.textContent = 'Level Not Done';
+      thisLevelNotDone.className = 'small-button';
+      thisLevelNotDone.addEventListener('click', () => {
+        setTreeDone(node.children, false, false);
+        saveData(nodesRaw);
+        render();
+      });
+
+      elements.push(childDoneAll, childNotDoneAll);
+      if (level > 0) {
+        elements.push(thisLevelDone, thisLevelNotDone);
+      }
+
       const addChildItem = document.createElement('button');
       addChildItem.textContent = '+Item';
       addChildItem.className = 'small-button';
@@ -198,10 +222,11 @@ function renderTree(nodes, container, level = 0) {
 
       elements.push(addChildItem, addChildList);
     }
+
     wrapper.append(...elements);
     li.appendChild(wrapper);
 
-    if (node.children.length > 0) {
+    if (node.type === 'list' && node.children.length > 0) {
       const childContainer = document.createElement('div');
       renderTree(node.children, childContainer, level + 1);
       li.appendChild(childContainer);
@@ -289,10 +314,11 @@ function registerControls() {
         const text = await file.text();
         const imported = JSON.parse(text);
         if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
-      saveData(nodesRaw);
-      render();
-      importInput.value = '';
-    } catch (error) {
+        nodesRaw = sanitizeTree(imported);
+        saveData(nodesRaw);
+        render();
+        importInput.value = '';
+      } catch (error) {
       alert('Import failed: ' + error.message);
       console.error(error);
     }

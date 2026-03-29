@@ -43,6 +43,22 @@ describe('Checklist core logic', () => {
     expect(root.children[0].done).toBe(false);
   });
 
+  it('setTreeDone on item nodes does not affect their descendants', () => {
+    const nested = createNode('nested');
+    root.children[0].children.push(nested);
+    setTreeDone([root.children[0]], true, true);
+    expect(root.children[0].done).toBe(true);
+    expect(root.children[0].children[0].done).toBe(false);
+  });
+
+  it('setLevelDone does not recurse via item nodes', () => {
+    const nested = createNode('nested');
+    root.children[0].children.push(nested);
+    setLevelDone(root.children, 1, true);
+    expect(root.children[0].done).toBe(false);
+    expect(root.children[0].children[0].done).toBe(false);
+  });
+
   it('setLevelDone sets target level only', () => {
     setLevelDone(root.children, 0, true);
     expect(root.children[0].done).toBe(true);
