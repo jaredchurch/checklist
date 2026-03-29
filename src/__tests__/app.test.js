@@ -79,15 +79,21 @@ describe('Checklist core logic', () => {
     const container = document.createElement('div');
     renderTree(root.children, container);
 
-    const firstListItem = container.querySelectorAll('li')[0];
-    const firstItemButtons = [...firstListItem.querySelectorAll('button')].map((b) => b.textContent);
-    expect(firstItemButtons).not.toContain('This+Descendants Done');
-    expect(firstItemButtons).not.toContain('This+Descendants Not Done');
+    const firstItem = container.querySelectorAll('li')[0];
+    const firstItemMenuToggle = firstItem.querySelector('button');
+    expect(firstItemMenuToggle?.textContent).not.toBe('⋮');
 
     const secondListItem = container.querySelectorAll('li')[1];
-    const secondItemButtons = [...secondListItem.querySelectorAll('button')].map((b) => b.textContent);
-    expect(secondItemButtons).toContain('This+Descendants Done');
-    expect(secondItemButtons).toContain('This+Descendants Not Done');
+    const secondListMenuToggle = [...secondListItem.querySelectorAll('button')].find((b) => b.textContent === '⋮');
+    expect(secondListMenuToggle).toBeDefined();
+
+    const firstListItemButtons = [...firstItem.querySelectorAll('button')].map((b) => b.textContent);
+    expect(firstListItemButtons).not.toContain('This+Descendants Done');
+    expect(firstListItemButtons).not.toContain('This+Descendants Not Done');
+
+    const secondListButtons = [...secondListItem.querySelectorAll('button')].map((b) => b.textContent);
+    expect(secondListButtons).toContain('This+Descendants Done');
+    expect(secondListButtons).toContain('This+Descendants Not Done');
   });
 
   it('getData/saveData roundtrips localStorage', () => {

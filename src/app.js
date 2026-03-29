@@ -162,28 +162,34 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const contextToggle = document.createElement('button');
-    contextToggle.textContent = '⋮';
-    contextToggle.className = 'small-button';
+    const elements = [checkbox, titleInput, removeButton];
 
-    const contextMenu = document.createElement('div');
-    contextMenu.className = 'context-menu';
-
-    const closeMenu = () => contextMenu.classList.remove('open');
-    contextToggle.addEventListener('click', () => {
-      contextMenu.classList.toggle('open');
-    });
-
-    const elements = [checkbox, titleInput, removeButton, contextToggle];
+    let contextMenu = null;
+    let closeMenu = null;
 
     const addMenuAction = (button) => {
       button.className = 'small-button';
       button.style.width = '100%';
-      button.addEventListener('click', closeMenu);
-      contextMenu.appendChild(button);
+      button.addEventListener('click', () => {
+        if (closeMenu) closeMenu();
+      });
+      if (contextMenu) contextMenu.appendChild(button);
     };
 
     if (node.type === 'list') {
+      const contextToggle = document.createElement('button');
+      contextToggle.textContent = '⋮';
+      contextToggle.className = 'small-button';
+
+      contextMenu = document.createElement('div');
+      contextMenu.className = 'context-menu';
+
+      closeMenu = () => contextMenu.classList.remove('open');
+      contextToggle.addEventListener('click', () => {
+        contextMenu.classList.toggle('open');
+      });
+
+      elements.push(contextToggle);
       const addChildItem = document.createElement('button');
       addChildItem.textContent = '+Item';
       addChildItem.addEventListener('click', () => {
@@ -243,7 +249,9 @@ function renderTree(nodes, container, level = 0) {
     }
 
     wrapper.append(...elements);
-    wrapper.appendChild(contextMenu);
+    if (node.type === 'list' && contextMenu) {
+      wrapper.appendChild(contextMenu);
+    }
     li.appendChild(wrapper);
 
     if (node.type === 'list' && node.children.length > 0) {
