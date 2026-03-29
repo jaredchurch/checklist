@@ -229,7 +229,6 @@ function render() {
 }
 
 function registerControls() {
-  console.log('registerControls called');
   const addItem = document.getElementById('add-item');
   const addList = document.getElementById('add-list');
   const markAllDone = document.getElementById('mark-all-done');
@@ -237,14 +236,9 @@ function registerControls() {
   const exportBtn = document.getElementById('export');
   const importInput = document.getElementById('import');
 
-  console.log('addItem element:', addItem);
-  console.log('addList element:', addList);
-
   if (addItem) {
     addItem.addEventListener('click', () => {
-      console.log('addItem clicked');
       nodesRaw.children.push(createNode());
-      console.log('children length:', nodesRaw.children.length);
       saveData(nodesRaw);
       render();
     });
@@ -252,9 +246,7 @@ function registerControls() {
 
   if (addList) {
     addList.addEventListener('click', () => {
-      console.log('addList clicked');
       nodesRaw.children.push(createListNode());
-      console.log('children length:', nodesRaw.children.length);
       saveData(nodesRaw);
       render();
     });
