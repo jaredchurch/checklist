@@ -67,6 +67,31 @@ input[type="file"]:hover {
   text-decoration: line-through;
   opacity: .6;
 }
+.tree-item {
+  position: relative;
+}
+.context-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  border: 1px solid #cbd5e1;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  border-radius: 0.35rem;
+  z-index: 10;
+  min-width: 10rem;
+  padding: 0.25rem;
+}
+.context-menu.open {
+  display: flex;
+}
+.context-menu button {
+  margin: 0.15rem 0;
+  width: 100%;
+  text-align: left;
+}
 .small-button {
   font-size: 0.75rem;
   padding: 0.2rem 0.4rem;

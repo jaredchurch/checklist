@@ -162,12 +162,30 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const elements = [checkbox, titleInput, removeButton];
+    const contextToggle = document.createElement('button');
+    contextToggle.textContent = '⋮';
+    contextToggle.className = 'small-button';
+
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'context-menu';
+
+    const closeMenu = () => contextMenu.classList.remove('open');
+    contextToggle.addEventListener('click', () => {
+      contextMenu.classList.toggle('open');
+    });
+
+    const elements = [checkbox, titleInput, removeButton, contextToggle];
+
+    const addMenuAction = (button) => {
+      button.className = 'small-button';
+      button.style.width = '100%';
+      button.addEventListener('click', closeMenu);
+      contextMenu.appendChild(button);
+    };
 
     if (node.type === 'list') {
       const addChildItem = document.createElement('button');
       addChildItem.textContent = '+Item';
-      addChildItem.className = 'small-button';
       addChildItem.addEventListener('click', () => {
         node.children.push(createNode());
         saveData(nodesRaw);
@@ -176,7 +194,6 @@ function renderTree(nodes, container, level = 0) {
 
       const addChildList = document.createElement('button');
       addChildList.textContent = '+Sub-list';
-      addChildList.className = 'small-button';
       addChildList.addEventListener('click', () => {
         node.children.push(createListNode());
         saveData(nodesRaw);
@@ -185,7 +202,6 @@ function renderTree(nodes, container, level = 0) {
 
       const childDoneAll = document.createElement('button');
       childDoneAll.textContent = 'This+Descendants Done';
-      childDoneAll.className = 'small-button';
       childDoneAll.addEventListener('click', () => {
         setTreeDone([node], true, true);
         saveData(nodesRaw);
@@ -194,7 +210,6 @@ function renderTree(nodes, container, level = 0) {
 
       const childNotDoneAll = document.createElement('button');
       childNotDoneAll.textContent = 'This+Descendants Not Done';
-      childNotDoneAll.className = 'small-button';
       childNotDoneAll.addEventListener('click', () => {
         setTreeDone([node], false, true);
         saveData(nodesRaw);
@@ -203,7 +218,6 @@ function renderTree(nodes, container, level = 0) {
 
       const thisLevelDone = document.createElement('button');
       thisLevelDone.textContent = 'Level Done';
-      thisLevelDone.className = 'small-button';
       thisLevelDone.addEventListener('click', () => {
         setTreeDone(node.children, true, false);
         saveData(nodesRaw);
@@ -212,20 +226,24 @@ function renderTree(nodes, container, level = 0) {
 
       const thisLevelNotDone = document.createElement('button');
       thisLevelNotDone.textContent = 'Level Not Done';
-      thisLevelNotDone.className = 'small-button';
       thisLevelNotDone.addEventListener('click', () => {
         setTreeDone(node.children, false, false);
         saveData(nodesRaw);
         render();
       });
 
-      elements.push(addChildItem, addChildList, childDoneAll, childNotDoneAll);
+      addMenuAction(addChildItem);
+      addMenuAction(addChildList);
+      addMenuAction(childDoneAll);
+      addMenuAction(childNotDoneAll);
       if (level > 0) {
-        elements.push(thisLevelDone, thisLevelNotDone);
+        addMenuAction(thisLevelDone);
+        addMenuAction(thisLevelNotDone);
       }
     }
 
     wrapper.append(...elements);
+    wrapper.appendChild(contextMenu);
     li.appendChild(wrapper);
 
     if (node.type === 'list' && node.children.length > 0) {
