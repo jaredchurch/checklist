@@ -176,10 +176,28 @@ function render() {
 }
 
 function registerControls() {
+  const addItem = document.getElementById('add-item');
+  const addList = document.getElementById('add-list');
   const markAllDone = document.getElementById('mark-all-done');
   const markAllNotDone = document.getElementById('mark-all-not-done');
   const exportBtn = document.getElementById('export');
   const importInput = document.getElementById('import');
+
+  if (addItem) {
+    addItem.addEventListener('click', () => {
+      nodesRaw.children.push(createNode());
+      saveData(nodesRaw);
+      render();
+    });
+  }
+
+  if (addList) {
+    addList.addEventListener('click', () => {
+      nodesRaw.children.push(createListNode());
+      saveData(nodesRaw);
+      render();
+    });
+  }
 
   if (markAllDone) {
     markAllDone.addEventListener('click', () => {
