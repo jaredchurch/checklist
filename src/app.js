@@ -7,8 +7,18 @@ function uid() {
 function createNode(title = 'New item') {
   return {
     id: uid(),
+    type: 'item',
     title,
     done: false,
+    children: []
+  };
+}
+
+function createListNode(title = 'New list') {
+  return {
+    id: uid(),
+    type: 'list',
+    title,
     children: []
   };
 }
@@ -51,14 +61,22 @@ function updateNode(nodes, id, callback) {
 
 function setTreeDone(nodes, done, includeDescendants = true) {
   for (const n of nodes) {
-    n.done = done;
-    if (includeDescendants) setTreeDone(n.children, done, true);
+    if (n.type === 'item') {
+      n.done = done;
+    }
+    if (includeDescendants) {
+      setTreeDone(n.children, done, true);
+    }
   }
 }
 
 function setLevelDone(nodes, level, done) {
   if (level === 0) {
-    setTreeDone(nodes, done, false);
+    for (const n of nodes) {
+      if (n.type === 'item') {
+        n.done = done;
+      }
+    }
     return;
   }
   for (const n of nodes) {
@@ -72,16 +90,22 @@ function renderTree(nodes, container, level = 0) {
   for (const node of nodes) {
     const li = document.createElement('li');
     const wrapper = document.createElement('div');
-    wrapper.className = `tree-item${node.done ? ' done' : ''}`;
+    wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
 
     const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = node.done;
-    checkbox.addEventListener('change', () => {
-      node.done = checkbox.checked;
-      saveData(nodesRaw);
-      render();
-    });
+    if (node.type === 'item') {
+      checkbox.type = 'checkbox';
+      checkbox.checked = node.done;
+      checkbox.addEventListener('change', () => {
+        node.done = checkbox.checked;
+        saveData(nodesRaw);
+        render();
+      });
+    } else {
+      checkbox.type = 'checkbox';
+      checkbox.disabled = true;
+      checkbox.title = 'Sub-list has no done state';
+    }
 
     const titleInput = document.createElement('input');
     titleInput.type = 'text';
@@ -93,11 +117,24 @@ function renderTree(nodes, container, level = 0) {
       render();
     });
 
-    const addChild = document.createElement('button');
-    addChild.textContent = '+Child';
-    addChild.className = 'small-button';
-    addChild.addEventListener('click', () => {
-      node.children.push(createNode());
+    const addChildItem = document.createElement('button');
+    addChildItem.textContent = '+Item';
+    addChildItem.className = 'small-button';
+    addChildItem.addEventListener('click', () => {
+      if (node.type === 'list') {
+        node.children.push(createNode());
+      } else {
+        node.children.push(createNode());
+      }
+      saveData(nodesRaw);
+      render();
+    });
+
+    const addChildList = document.createElement('button');
+    addChildList.textContent = '+Sub-list';
+    addChildList.className = 'small-button';
+    addChildList.addEventListener('click', () => {
+      node.children.push(createListNode());
       saveData(nodesRaw);
       render();
     });
@@ -152,7 +189,7 @@ function renderTree(nodes, container, level = 0) {
       render();
     });
 
-    wrapper.append(checkbox, titleInput, addChild, removeButton, childDoneAll, childNotDoneAll, thisLevelDone, thisLevelNotDone);
+    wrapper.append(checkbox, titleInput, addChildItem, addChildList, removeButton, childDoneAll, childNotDoneAll, thisLevelDone, thisLevelNotDone);
     li.appendChild(wrapper);
 
     if (node.children.length > 0) {
@@ -183,14 +220,21 @@ function render() {
 }
 
 function registerControls() {
-  const addRoot = document.getElementById('add-root');
+  const addRootItem = document.getElementById('add-root-item');
+  const addRootList = document.getElementById('add-root-list');
   const markAllDone = document.getElementById('mark-all-done');
   const markAllNotDone = document.getElementById('mark-all-not-done');
   const exportBtn = document.getElementById('export');
   const importInput = document.getElementById('import');
 
-  !addRoot || addRoot.addEventListener('click', () => {
+  !addRootItem || addRootItem.addEventListener('click', () => {
     nodesRaw.push(createNode());
+    saveData(nodesRaw);
+    render();
+  });
+
+  !addRootList || addRootList.addEventListener('click', () => {
+    nodesRaw.push(createListNode());
     saveData(nodesRaw);
     render();
   });
@@ -254,6 +298,7 @@ export {
   getData,
   saveData,
   createNode,
+  createListNode,
   setTreeDone,
   setLevelDone,
   findNodeById,
