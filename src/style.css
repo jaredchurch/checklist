@@ -1,0 +1,74 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: #f1f5f9;
+  color: #1f2937;
+  padding: 0;
+}
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.controls {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+button,
+input[type="file"] {
+  padding: .5rem .75rem;
+  font-size: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.35rem;
+  background-color: #ffffff;
+  color: #111827;
+  cursor: pointer;
+}
+button:hover,
+input[type="file"]:hover {
+  border-color: #7c3aed;
+}
+.import-label {
+  display: inline-flex;
+  align-items: center;
+}
+.tree {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: .75rem;
+}
+.tree ul {
+  list-style: none;
+  padding-left: 1.2rem;
+}
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.tree-item input[type="text"] {
+  flex: 1;
+  padding: 0.35rem;
+  border: 1px solid #cbd5e1;
+  border-radius: .25rem;
+}
+.tree-item.done > .label {
+  text-decoration: line-through;
+  opacity: .6;
+}
+.small-button {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  min-width: 3rem;
+}

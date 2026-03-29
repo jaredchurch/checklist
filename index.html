@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#2196f3" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>Checklist PWA</title>
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Checklist PWA</h1>
+        <p>Infinite nested lists with done/not-done controls</p>
+      </header>
+      <main>
+        <section id="controls" class="controls">
+          <button id="add-root">Add root item</button>
+          <button id="mark-all-done">Mark All Done</button>
+          <button id="mark-all-not-done">Mark All Not Done</button>
+          <button id="export">Export JSON</button>
+          <label class="import-label">
+            Import JSON
+            <input id="import" type="file" accept="application/json" />
+          </label>
+        </section>
+
+        <section id="tree" class="tree"></section>
+      </main>
+      <footer>
+        <small>Installed data is saved locally in LocalStorage and persisted by service worker caching.</small>
+      </footer>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
