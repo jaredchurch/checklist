@@ -115,6 +115,10 @@ function renderTree(nodes, container, level = 0) {
   container.innerHTML = '';
   const ul = document.createElement('ul');
   for (const node of nodes) {
+    if (node.type === 'item') {
+      node.children = []; // Enforce no descendants on item nodes
+    }
+
     const li = document.createElement('li');
     const wrapper = document.createElement('div');
     wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
@@ -371,5 +375,7 @@ export {
   setTreeDone,
   setLevelDone,
   findNodeById,
-  findParent
+  findParent,
+  render,
+  renderTree
 };

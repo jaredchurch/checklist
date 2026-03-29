@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData } from '../app.js';
+import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData, renderTree } from '../app.js';
 
 describe('Checklist core logic', () => {
   let root;
@@ -67,6 +67,27 @@ describe('Checklist core logic', () => {
   it('findNodeById returns correct node', () => {
     const result = findNodeById(root, 'a');
     expect(result).toEqual(root.children[0]);
+  });
+
+  it('renderTree does not add descendant action buttons on item nodes', () => {
+    const root = createListNode('Root');
+    const item = createNode('Item');
+    item.children.push(createNode('child-of-item'));
+    const list = createListNode('List');
+    root.children.push(item, list);
+
+    const container = document.createElement('div');
+    renderTree(root.children, container);
+
+    const firstListItem = container.querySelectorAll('li')[0];
+    const firstItemButtons = [...firstListItem.querySelectorAll('button')].map((b) => b.textContent);
+    expect(firstItemButtons).not.toContain('This+Descendants Done');
+    expect(firstItemButtons).not.toContain('This+Descendants Not Done');
+
+    const secondListItem = container.querySelectorAll('li')[1];
+    const secondItemButtons = [...secondListItem.querySelectorAll('button')].map((b) => b.textContent);
+    expect(secondItemButtons).toContain('This+Descendants Done');
+    expect(secondItemButtons).toContain('This+Descendants Not Done');
   });
 
   it('getData/saveData roundtrips localStorage', () => {
