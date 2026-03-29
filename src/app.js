@@ -123,76 +123,26 @@ function renderTree(nodes, container, level = 0) {
       render();
     });
 
-    const addChildItem = document.createElement('button');
-    addChildItem.textContent = '+Item';
-    addChildItem.className = 'small-button';
-    addChildItem.addEventListener('click', () => {
-      node.children.push(createNode());
-      saveData(nodesRaw);
-      render();
-    });
-
-    const addChildList = document.createElement('button');
-    addChildList.textContent = '+Sub-list';
-    addChildList.className = 'small-button';
-    addChildList.addEventListener('click', () => {
-      node.children.push(createListNode());
-      saveData(nodesRaw);
-      render();
-    });
-
-    const removeButton = document.createElement('button');
-    removeButton.textContent = 'Delete';
-    removeButton.className = 'small-button';
-    removeButton.addEventListener('click', () => {
-      const parent = findParent(nodesRaw, node.id);
-      const array = parent ? parent.children : nodesRaw.children;
-      const idx = array.findIndex((c) => c.id === node.id);
-      if (idx !== -1) {
-        array.splice(idx, 1);
-        saveData(nodesRaw);
-        render();
-      }
-    });
-
-    const childDoneAll = document.createElement('button');
-    childDoneAll.textContent = 'This+Descendants Done';
-    childDoneAll.className = 'small-button';
-    childDoneAll.addEventListener('click', () => {
-      setTreeDone([node], true, true);
-      saveData(nodesRaw);
-      render();
-    });
-
-    const childNotDoneAll = document.createElement('button');
-    childNotDoneAll.textContent = 'This+Descendants Not Done';
-    childNotDoneAll.className = 'small-button';
-    childNotDoneAll.addEventListener('click', () => {
-      setTreeDone([node], false, true);
-      saveData(nodesRaw);
-      render();
-    });
-
-    const thisLevelDone = document.createElement('button');
-    thisLevelDone.textContent = 'Level Done';
-    thisLevelDone.className = 'small-button';
-    thisLevelDone.addEventListener('click', () => {
-      setLevelDone(nodes, level, true);
-      saveData(nodesRaw);
-      render();
-    });
-
-    const thisLevelNotDone = document.createElement('button');
-    thisLevelNotDone.textContent = 'Level Not Done';
-    thisLevelNotDone.className = 'small-button';
-    thisLevelNotDone.addEventListener('click', () => {
-      setLevelDone(nodes, level, false);
-      saveData(nodesRaw);
-      render();
-    });
-
     const elements = [checkbox, titleInput, removeButton, childDoneAll, childNotDoneAll, thisLevelDone, thisLevelNotDone];
     if (node.type === 'list') {
+      const addChildItem = document.createElement('button');
+      addChildItem.textContent = '+Item';
+      addChildItem.className = 'small-button';
+      addChildItem.addEventListener('click', () => {
+        node.children.push(createNode());
+        saveData(nodesRaw);
+        render();
+      });
+
+      const addChildList = document.createElement('button');
+      addChildList.textContent = '+Sub-list';
+      addChildList.className = 'small-button';
+      addChildList.addEventListener('click', () => {
+        node.children.push(createListNode());
+        saveData(nodesRaw);
+        render();
+      });
+
       elements.push(addChildItem, addChildList);
     }
     wrapper.append(...elements);
