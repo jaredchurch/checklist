@@ -165,6 +165,24 @@ function renderTree(nodes, container, level = 0) {
     const elements = [checkbox, titleInput, removeButton];
 
     if (node.type === 'list') {
+      const addChildItem = document.createElement('button');
+      addChildItem.textContent = '+Item';
+      addChildItem.className = 'small-button';
+      addChildItem.addEventListener('click', () => {
+        node.children.push(createNode());
+        saveData(nodesRaw);
+        render();
+      });
+
+      const addChildList = document.createElement('button');
+      addChildList.textContent = '+Sub-list';
+      addChildList.className = 'small-button';
+      addChildList.addEventListener('click', () => {
+        node.children.push(createListNode());
+        saveData(nodesRaw);
+        render();
+      });
+
       const childDoneAll = document.createElement('button');
       childDoneAll.textContent = 'This+Descendants Done';
       childDoneAll.className = 'small-button';
@@ -201,30 +219,10 @@ function renderTree(nodes, container, level = 0) {
         render();
       });
 
-      elements.push(childDoneAll, childNotDoneAll);
+      elements.push(addChildItem, addChildList, childDoneAll, childNotDoneAll);
       if (level > 0) {
         elements.push(thisLevelDone, thisLevelNotDone);
       }
-
-      const addChildItem = document.createElement('button');
-      addChildItem.textContent = '+Item';
-      addChildItem.className = 'small-button';
-      addChildItem.addEventListener('click', () => {
-        node.children.push(createNode());
-        saveData(nodesRaw);
-        render();
-      });
-
-      const addChildList = document.createElement('button');
-      addChildList.textContent = '+Sub-list';
-      addChildList.className = 'small-button';
-      addChildList.addEventListener('click', () => {
-        node.children.push(createListNode());
-        saveData(nodesRaw);
-        render();
-      });
-
-      elements.push(addChildItem, addChildList);
     }
 
     wrapper.append(...elements);
