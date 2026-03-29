@@ -225,7 +225,7 @@ let nodesRaw = getData();
 function render() {
   const container = document.getElementById('tree');
   if (!container) return;
-  renderTree([nodesRaw], container);
+  renderTree(nodesRaw.children, container);
 }
 
 function registerControls() {
