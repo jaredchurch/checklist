@@ -61,6 +61,52 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
+let importFileInput = null;
+
+function exportData() {
+  const dataString = JSON.stringify(nodesRaw, null, 2);
+  const blob = new Blob([dataString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'checklist-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function promptImportData() {
+  const input = importFileInput || document.getElementById('import');
+  if (input) {
+    input.click();
+    return;
+  }
+
+  const fallback = document.createElement('input');
+  fallback.type = 'file';
+  fallback.accept = 'application/json';
+  fallback.style.display = 'none';
+  fallback.addEventListener('change', async (evt) => {
+    const file = evt.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
+      nodesRaw = sanitizeTree(imported);
+      saveData(nodesRaw);
+      render();
+      fallback.value = '';
+    } catch (error) {
+      alert('Import failed: ' + error.message);
+      console.error(error);
+    } finally {
+      document.body.removeChild(fallback);
+    }
+  });
+  document.body.appendChild(fallback);
+  fallback.click();
+}
+
 function findNodeById(root, id) {
   if (root.id === id) return root;
   for (const n of root.children) {
@@ -222,6 +268,18 @@ function renderTree(nodes, container, level = 0) {
         render();
       });
 
+      const exportJson = document.createElement('button');
+      exportJson.textContent = 'Export JSON';
+      exportJson.addEventListener('click', () => {
+        exportData();
+      });
+
+      const importJson = document.createElement('button');
+      importJson.textContent = 'Import JSON';
+      importJson.addEventListener('click', () => {
+        promptImportData();
+      });
+
       const thisLevelDone = document.createElement('button');
       thisLevelDone.textContent = 'Level Done';
       thisLevelDone.addEventListener('click', () => {
@@ -242,6 +300,8 @@ function renderTree(nodes, container, level = 0) {
       addMenuAction(addChildList);
       addMenuAction(childDoneAll);
       addMenuAction(childNotDoneAll);
+      addMenuAction(exportJson);
+      addMenuAction(importJson);
       if (level > 0) {
         addMenuAction(thisLevelDone);
         addMenuAction(thisLevelNotDone);
@@ -335,6 +395,7 @@ function registerControls() {
   }
 
   if (importInput) {
+    importFileInput = importInput;
     importInput.addEventListener('change', async (evt) => {
       const file = evt.target.files?.[0];
       if (!file) return;
@@ -347,10 +408,10 @@ function registerControls() {
         render();
         importInput.value = '';
       } catch (error) {
-      alert('Import failed: ' + error.message);
-      console.error(error);
-    }
-  });
+        alert('Import failed: ' + error.message);
+        console.error(error);
+      }
+    });
   }
 }
 
