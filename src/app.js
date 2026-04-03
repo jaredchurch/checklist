@@ -83,6 +83,18 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
+function exportSubListData() {
+  const currentNode = getCurrentParentNode();
+  const dataString = JSON.stringify(currentNode, null, 2);
+  const blob = new Blob([dataString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'checklist-sublist.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function promptImportData() {
   const input = importFileInput || document.getElementById('import');
   if (input) {
@@ -102,6 +114,36 @@ function promptImportData() {
       const imported = JSON.parse(text);
       if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
       nodesRaw = sanitizeTree(imported);
+      saveData(nodesRaw);
+      render();
+      fallback.value = '';
+    } catch (error) {
+      alert('Import failed: ' + error.message);
+      console.error(error);
+    } finally {
+      document.body.removeChild(fallback);
+    }
+  });
+  document.body.appendChild(fallback);
+  fallback.click();
+}
+
+function promptImportSubListData() {
+  const fallback = document.createElement('input');
+  fallback.type = 'file';
+  fallback.accept = 'application/json';
+  fallback.style.display = 'none';
+  fallback.addEventListener('change', async (evt) => {
+    const file = evt.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
+      
+      const currentNode = getCurrentParentNode();
+      currentNode.children = currentNode.children || [];
+      currentNode.children.push(sanitizeTree(imported));
       saveData(nodesRaw);
       render();
       fallback.value = '';
@@ -495,14 +537,20 @@ function registerControls() {
 
   if (globalExport) {
     globalExport.addEventListener('click', () => {
-      exportData();
+      if (currentPath.length === 0) {
+        // At root level, export entire tree
+        exportData();
+      } else {
+        // In sub-list, export current sub-list
+        exportSubListData();
+      }
       globalContext?.classList.remove('open');
     });
   }
 
   if (globalImport) {
     globalImport.addEventListener('click', () => {
-      promptImportData();
+      showImportDialog();
       globalContext?.classList.remove('open');
     });
   }
@@ -579,6 +627,83 @@ function registerControls() {
 
   if (closeAbout) {
     closeAbout.addEventListener('click', closeAboutDialog);
+  }
+
+  // Import dialog functionality
+  const importDialog = document.getElementById('import-dialog');
+  const importReplace = document.getElementById('import-replace');
+  const importSublist = document.getElementById('import-sublist');
+  const cancelImport = document.getElementById('cancel-import');
+
+  let importFileData = null;
+
+  const showImportDialog = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.style.display = 'none';
+    input.addEventListener('change', async (evt) => {
+      const file = evt.target.files?.[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
+        
+        importFileData = imported;
+        importDialog.style.display = 'flex';
+        document.body.removeChild(input);
+      } catch (error) {
+        alert('Invalid file: ' + error.message);
+        document.body.removeChild(input);
+      }
+    });
+    document.body.appendChild(input);
+    input.click();
+  };
+
+  const closeImportDialog = () => {
+    if (!importDialog) return;
+    importDialog.style.display = 'none';
+    importFileData = null;
+  };
+
+  if (importReplace) {
+    importReplace.addEventListener('click', () => {
+      if (importFileData) {
+        nodesRaw = sanitizeTree(importFileData);
+        saveData(nodesRaw);
+        currentPath = [];
+        render();
+        closeImportDialog();
+      }
+    });
+  }
+
+  if (importSublist) {
+    importSublist.addEventListener('click', () => {
+      if (importFileData) {
+        const currentNode = getCurrentParentNode();
+        currentNode.children = currentNode.children || [];
+        currentNode.children.push(sanitizeTree(importFileData));
+        saveData(nodesRaw);
+        render();
+        closeImportDialog();
+      }
+    });
+  }
+
+  if (cancelImport) {
+    cancelImport.addEventListener('click', closeImportDialog);
+  }
+
+  if (importDialog) {
+    importDialog.addEventListener('click', (evt) => {
+      if (evt.target === importDialog) {
+        closeImportDialog();
+      }
+    });
   }
 
   // Unified click outside to close all context menus
