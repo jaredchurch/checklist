@@ -361,6 +361,7 @@ function renderTree(nodes, container, level = 0) {
     titleInput.addEventListener('keydown', (evt) => {
       if (evt.key === 'Enter') {
         evt.preventDefault();
+        node.title = titleInput.value;
         node.isNew = false;
         if (node.type === 'item') {
           // Create new item
@@ -378,8 +379,9 @@ function renderTree(nodes, container, level = 0) {
               if (newInput) {
                 newInput.focus();
                 newInput.select();
+                setTimeout(() => newInput.focus(), 10);
               }
-            }, 0);
+            }, 10);
           }
         } else if (node.type === 'list') {
           // Drill into list and create new item
@@ -397,8 +399,9 @@ function renderTree(nodes, container, level = 0) {
               if (lastInput) {
                 lastInput.focus();
                 lastInput.select();
+                setTimeout(() => lastInput.focus(), 10);
               }
-            }, 0);
+            }, 10);
           } else {
             render();
           }
@@ -595,8 +598,9 @@ function registerControls() {
         if (lastInput) {
           lastInput.focus();
           lastInput.select();
+          setTimeout(() => lastInput.focus(), 10);
         }
-      }, 0);
+      }, 10);
     });
   }
 
@@ -615,8 +619,9 @@ function registerControls() {
         if (lastInput) {
           lastInput.focus();
           lastInput.select();
+          setTimeout(() => lastInput.focus(), 10);
         }
-      }, 0);
+      }, 10);
     });
   }
 
