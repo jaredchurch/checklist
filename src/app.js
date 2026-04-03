@@ -615,7 +615,7 @@ async function fetchCommitInfo() {
 }
 
 function init() {
-  document.title = 'Checklist PWA';
+  document.title = 'Checklist';
   registerControls();
   render();
   fetchCommitInfo();
