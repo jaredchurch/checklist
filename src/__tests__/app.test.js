@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData, renderTree } from '../app.js';
+import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData, renderTree, sanitizeTree } from '../app.js';
 
 describe('Checklist core logic', () => {
   let root;
@@ -67,6 +67,25 @@ describe('Checklist core logic', () => {
   it('findNodeById returns correct node', () => {
     const result = findNodeById(root, 'a');
     expect(result).toEqual(root.children[0]);
+  });
+
+  it('sanitizeTree regenerates duplicate and missing IDs', () => {
+    const existingIds = new Set(['root', 'a']);
+    const imported = {
+      id: 'a',
+      type: 'list',
+      title: 'Imported',
+      children: [
+        { id: 'a', type: 'item', title: 'Child item', done: false, children: [] },
+        { type: 'item', title: 'Missing id', done: false, children: [] }
+      ]
+    };
+
+    const sanitized = sanitizeTree(imported, existingIds);
+    expect(sanitized.id).not.toBe('a');
+    expect(sanitized.children[0].id).not.toBe('a');
+    expect(sanitized.children[1].id).toEqual(expect.any(String));
+    expect(new Set([sanitized.id, sanitized.children[0].id, sanitized.children[1].id]).size).toBe(3);
   });
 
   it('renderTree does not add descendant action buttons on item nodes', () => {

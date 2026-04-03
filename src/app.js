@@ -10,7 +10,8 @@ function createNode(title = 'New item') {
     type: 'item',
     title,
     done: false,
-    children: []
+    children: [],
+    isNew: true
   };
 }
 
@@ -19,19 +20,45 @@ function createListNode(title = 'New list') {
     id: uid(),
     type: 'list',
     title,
-    children: []
+    children: [],
+    isNew: true
   };
 }
 
-function sanitizeTree(node) {
+function collectIds(node, ids = new Set()) {
+  if (node && typeof node.id === 'string') {
+    ids.add(node.id);
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      collectIds(child, ids);
+    }
+  }
+  return ids;
+}
+
+function sanitizeTree(node, existingIds = new Set()) {
+  if (!node || typeof node !== 'object') {
+    return createListNode('Root');
+  }
+
+  if (typeof node.id !== 'string' || existingIds.has(node.id)) {
+    node.id = uid();
+  }
+  existingIds.add(node.id);
+
   if (node.type === 'item') {
     node.children = [];
     if (typeof node.done !== 'boolean') node.done = false;
+    if (typeof node.isNew !== 'boolean') node.isNew = false;
     return node;
   }
 
   if (node.type === 'list') {
-    node.children = Array.isArray(node.children) ? node.children.map(sanitizeTree) : [];
+    node.children = Array.isArray(node.children)
+      ? node.children.map((child) => sanitizeTree(child, existingIds))
+      : [];
+    if (typeof node.isNew !== 'boolean') node.isNew = false;
     return node;
   }
 
@@ -79,6 +106,18 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
+function exportSubListData() {
+  const currentNode = getCurrentParentNode();
+  const dataString = JSON.stringify(currentNode, null, 2);
+  const blob = new Blob([dataString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'checklist-sublist.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function promptImportData() {
   const input = importFileInput || document.getElementById('import');
   if (input) {
@@ -98,6 +137,37 @@ function promptImportData() {
       const imported = JSON.parse(text);
       if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
       nodesRaw = sanitizeTree(imported);
+      saveData(nodesRaw);
+      render();
+      fallback.value = '';
+    } catch (error) {
+      alert('Import failed: ' + error.message);
+      console.error(error);
+    } finally {
+      document.body.removeChild(fallback);
+    }
+  });
+  document.body.appendChild(fallback);
+  fallback.click();
+}
+
+function promptImportSubListData() {
+  const fallback = document.createElement('input');
+  fallback.type = 'file';
+  fallback.accept = 'application/json';
+  fallback.style.display = 'none';
+  fallback.addEventListener('change', async (evt) => {
+    const file = evt.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
+      
+      const currentNode = getCurrentParentNode();
+      currentNode.children = currentNode.children || [];
+      const existingIds = collectIds(nodesRaw);
+      currentNode.children.push(sanitizeTree(imported, existingIds));
       saveData(nodesRaw);
       render();
       fallback.value = '';
@@ -228,8 +298,72 @@ function renderTree(nodes, container, level = 0) {
     titleInput.className = 'label';
     titleInput.addEventListener('change', () => {
       node.title = titleInput.value;
+      node.isNew = false;
       saveData(nodesRaw);
       render();
+    });
+    titleInput.addEventListener('blur', () => {
+      node.isNew = false;
+    });
+    titleInput.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Enter') {
+        evt.preventDefault();
+        node.isNew = false;
+        if (node.type === 'item') {
+          // Create new item
+          const parent = findParent(nodesRaw, node.id);
+          const array = parent ? parent.children : nodesRaw.children;
+          const idx = array.findIndex((c) => c.id === node.id);
+          if (idx !== -1) {
+            array.splice(idx + 1, 0, createNode());
+            saveData(nodesRaw);
+            render();
+            // Focus the new item
+            setTimeout(() => {
+              const inputs = document.querySelectorAll('#tree-content input.label');
+              const newInput = inputs[idx + 1];
+              if (newInput) {
+                newInput.focus();
+                newInput.select();
+              }
+            }, 0);
+          }
+        } else if (node.type === 'list') {
+          // Drill into list and create new item
+          currentPath.push(node.id);
+          const listNode = findNodeById(nodesRaw, node.id);
+          if (listNode) {
+            listNode.children = listNode.children || [];
+            listNode.children.push(createNode());
+            saveData(nodesRaw);
+            render();
+            // Focus the new item in the sub-list
+            setTimeout(() => {
+              const inputs = document.querySelectorAll('#tree-content input.label');
+              const lastInput = inputs[inputs.length - 1];
+              if (lastInput) {
+                lastInput.focus();
+                lastInput.select();
+              }
+            }, 0);
+          } else {
+            render();
+          }
+        }
+      } else if (evt.key === 'Escape') {
+        if (node.isNew) {
+          evt.preventDefault();
+          // Delete the new item
+          const parent = findParent(nodesRaw, node.id);
+          const array = parent ? parent.children : nodesRaw.children;
+          const idx = array.findIndex((c) => c.id === node.id);
+          if (idx !== -1) {
+            array.splice(idx, 1);
+            saveData(nodesRaw);
+            render();
+          }
+        }
+      }
     });
 
     const removeButton = document.createElement('button');
@@ -350,9 +484,19 @@ function registerControls() {
     addItem.addEventListener('click', () => {
       const parent = getCurrentParentNode();
       parent.children = parent.children || [];
-      parent.children.push(createNode());
+      const newNode = createNode();
+      parent.children.push(newNode);
       saveData(nodesRaw);
       render();
+      // Focus the new item
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#tree-content input.label');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput) {
+          lastInput.focus();
+          lastInput.select();
+        }
+      }, 0);
     });
   }
 
@@ -360,9 +504,19 @@ function registerControls() {
     addList.addEventListener('click', () => {
       const parent = getCurrentParentNode();
       parent.children = parent.children || [];
-      parent.children.push(createListNode());
+      const newNode = createListNode();
+      parent.children.push(newNode);
       saveData(nodesRaw);
       render();
+      // Focus the new list
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#tree-content input.label');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput) {
+          lastInput.focus();
+          lastInput.select();
+        }
+      }, 0);
     });
   }
 
@@ -407,14 +561,20 @@ function registerControls() {
 
   if (globalExport) {
     globalExport.addEventListener('click', () => {
-      exportData();
+      if (currentPath.length === 0) {
+        // At root level, export entire tree
+        exportData();
+      } else {
+        // In sub-list, export current sub-list
+        exportSubListData();
+      }
       globalContext?.classList.remove('open');
     });
   }
 
   if (globalImport) {
     globalImport.addEventListener('click', () => {
-      promptImportData();
+      showImportDialog();
       globalContext?.classList.remove('open');
     });
   }
@@ -464,6 +624,7 @@ function registerControls() {
     aboutCommitInfo.textContent = 'Loading commit info...';
     await fetchCommitInfo();
     globalContext?.classList.remove('open');
+    updateMenuLock();
   };
 
   const closeAboutDialog = () => {
@@ -490,7 +651,96 @@ function registerControls() {
   }
 
   if (closeAbout) {
-    closeAbout.addEventListener('click', closeAboutDialog);
+    closeAbout.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      closeAboutDialog();
+    });
+  }
+
+  // Import dialog functionality
+  const importDialog = document.getElementById('import-dialog');
+  const importReplace = document.getElementById('import-replace');
+  const importSublist = document.getElementById('import-sublist');
+  const cancelImport = document.getElementById('cancel-import');
+
+  let importFileData = null;
+
+  const showImportDialog = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.style.display = 'none';
+    input.addEventListener('change', async (evt) => {
+      const file = evt.target.files?.[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
+        
+        importFileData = imported;
+        importDialog.style.display = 'flex';
+        document.body.removeChild(input);
+      } catch (error) {
+        alert('Invalid file: ' + error.message);
+        document.body.removeChild(input);
+      }
+    });
+    document.body.appendChild(input);
+    input.click();
+
+    // Make sure any residual menu-open state doesn't block the dialog
+    updateMenuLock();
+  };
+
+  const closeImportDialog = () => {
+    if (!importDialog) return;
+    importDialog.style.display = 'none';
+    importFileData = null;
+  };
+
+  if (importReplace) {
+    importReplace.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      if (importFileData) {
+        nodesRaw = sanitizeTree(importFileData);
+        saveData(nodesRaw);
+        currentPath = [];
+        render();
+        closeImportDialog();
+      }
+    });
+  }
+
+  if (importSublist) {
+    importSublist.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      if (importFileData) {
+        const currentNode = getCurrentParentNode();
+        currentNode.children = currentNode.children || [];
+        const existingIds = collectIds(nodesRaw);
+        currentNode.children.push(sanitizeTree(importFileData, existingIds));
+        saveData(nodesRaw);
+        render();
+        closeImportDialog();
+      }
+    });
+  }
+
+  if (cancelImport) {
+    cancelImport.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      closeImportDialog();
+    });
+  }
+
+  if (importDialog) {
+    importDialog.addEventListener('click', (evt) => {
+      if (evt.target === importDialog) {
+        closeImportDialog();
+      }
+    });
   }
 
   // Unified click outside to close all context menus
@@ -567,6 +817,7 @@ export {
   setLevelDone,
   findNodeById,
   findParent,
+  sanitizeTree,
   render,
   renderTree
 };
