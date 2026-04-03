@@ -398,20 +398,103 @@ function registerControls() {
     });
   }
 
+  const globalAbout = document.getElementById('global-about');
+  const aboutDialog = document.getElementById('about-dialog');
+  const aboutCommitInfo = document.getElementById('about-commit-info');
+  const closeAbout = document.getElementById('close-about');
+
+  let lastFocusedElement = null;
+
+  const onAboutKeydown = (evt) => {
+    if (evt.key === 'Escape' && aboutDialog.style.display === 'flex') {
+      evt.preventDefault();
+      closeAboutDialog();
+    }
+
+    if (evt.key === 'Tab' && aboutDialog.style.display === 'flex') {
+      const focusable = aboutDialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const focusArray = Array.from(focusable).filter((el) => !el.hasAttribute('disabled'));
+      const currentIndex = focusArray.indexOf(document.activeElement);
+      let nextIndex = currentIndex;
+
+      if (evt.shiftKey) {
+        nextIndex = currentIndex <= 0 ? focusArray.length - 1 : currentIndex - 1;
+      } else {
+        nextIndex = currentIndex === focusArray.length - 1 ? 0 : currentIndex + 1;
+      }
+
+      evt.preventDefault();
+      focusArray[nextIndex].focus();
+    }
+  };
+
+  const openAbout = async () => {
+    if (!aboutDialog || !aboutCommitInfo) return;
+
+    lastFocusedElement = document.activeElement;
+    aboutDialog.style.display = 'flex';
+
+    const focusable = aboutDialog.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable) focusable.focus();
+
+    document.addEventListener('keydown', onAboutKeydown);
+
+    aboutCommitInfo.textContent = 'Loading commit info...';
+    await fetchCommitInfo();
+    globalContext?.classList.remove('open');
+  };
+
+  const closeAboutDialog = () => {
+    if (!aboutDialog) return;
+
+    aboutDialog.style.display = 'none';
+    document.removeEventListener('keydown', onAboutKeydown);
+
+    if (lastFocusedElement && lastFocusedElement.focus) {
+      lastFocusedElement.focus();
+    }
+  };
+
+  if (aboutDialog) {
+    aboutDialog.addEventListener('click', (evt) => {
+      if (evt.target === aboutDialog) {
+        closeAboutDialog();
+      }
+    });
+  }
+
+  if (globalAbout) {
+    globalAbout.addEventListener('click', openAbout);
+  }
+
+  if (closeAbout) {
+    closeAbout.addEventListener('click', closeAboutDialog);
+  }
+
 }
 
 async function fetchCommitInfo() {
-  const el = document.getElementById('commit-info');
+  const el = document.getElementById('about-commit-info') || document.getElementById('commit-info');
   if (!el) return;
 
   const repoOwner = 'jaredchurch';
   const repoName = 'checklist';
 
   try {
-    const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`);
-    if (!repoResp.ok) throw new Error(`Repo info API ${repoResp.status}`);
-    const repoData = await repoResp.json();
-    const branch = repoData.default_branch || 'main';
+    let branch = 'main';
+
+    const pagesResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/pages`);
+    if (pagesResp.ok) {
+      const pagesData = await pagesResp.json();
+      branch = pagesData.source?.branch || branch;
+    } else {
+      const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`);
+      if (repoResp.ok) {
+        const repoData = await repoResp.json();
+        branch = repoData.default_branch || branch;
+      }
+    }
 
     const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`);
     if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`);

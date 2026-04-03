@@ -14,8 +14,7 @@
   <body>
     <div id="app">
       <header>
-        <h1>Checklist PWA</h1>
-        <p>Infinite nested lists with done/not-done controls</p>
+        <h1>Checklist</h1>
       </header>
       <main>
         <section id="controls" class="controls">
@@ -29,16 +28,27 @@
               <button id="global-mark-all-not-done">Mark All Not Done</button>
               <button id="global-export">Export JSON</button>
               <button id="global-import">Import JSON</button>
+              <button id="global-about">About</button>
             </div>
           </div>
         </section>
 
         <section id="tree" class="tree"></section>
+
+        <div id="about-dialog" class="about-dialog" role="dialog" aria-modal="true" aria-labelledby="about-title" aria-describedby="about-desc" style="display:none;">
+          <div class="about-content">
+            <h2 id="about-title">About Checklist PWA</h2>
+            <p id="about-desc">This checklist app stores all data locally. The current version info is pulled from the branch used by GitHub Pages.</p>
+            <div id="about-commit-info">Loading commit info...</div>
+            <button id="close-about">Close</button>
+          </div>
+        </div>
       </main>
+      <!--
       <footer>
         <small>Installed data is saved locally in LocalStorage and persisted by service worker caching.</small>
-        <div id="commit-info" class="commit-info">Loading commit info...</div>
       </footer>
+      -->
     </div>
 
     <script type="module" src="src/main.js"></script>

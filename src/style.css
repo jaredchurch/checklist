@@ -105,6 +105,32 @@ input[type="file"]:hover {
   width: 100%;
   text-align: left;
 }
+.about-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 100;
+}
+.about-dialog .about-content {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.about-dialog .about-content h2 {
+  margin-top: 0;
+}
+.about-dialog .about-content button {
+  margin-top: 1rem;
+}
 .small-button {
   font-size: 0.75rem;
   padding: 0.2rem 0.4rem;
