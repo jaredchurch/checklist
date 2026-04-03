@@ -332,6 +332,8 @@ function registerControls() {
   const addList = document.getElementById('add-list');
   const globalMarkAllDone = document.getElementById('global-mark-all-done');
   const globalMarkAllNotDone = document.getElementById('global-mark-all-not-done');
+
+  if (addItem) {
     addItem.addEventListener('click', () => {
       nodesRaw.children.push(createNode());
       saveData(nodesRaw);
