@@ -23,10 +23,13 @@ header {
   flex-wrap: wrap;
   gap: .5rem;
   position: relative;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .global-context-menu {
   position: relative;
+  margin-left: auto;
 }
 
 .global-context-menu .context-menu {

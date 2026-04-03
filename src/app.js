@@ -330,10 +330,8 @@ function render() {
 function registerControls() {
   const addItem = document.getElementById('add-item');
   const addList = document.getElementById('add-list');
-  const markAllDone = document.getElementById('mark-all-done');
-  const markAllNotDone = document.getElementById('mark-all-not-done');
-
-  if (addItem) {
+  const globalMarkAllDone = document.getElementById('global-mark-all-done');
+  const globalMarkAllNotDone = document.getElementById('global-mark-all-not-done');
     addItem.addEventListener('click', () => {
       nodesRaw.children.push(createNode());
       saveData(nodesRaw);
@@ -349,19 +347,21 @@ function registerControls() {
     });
   }
 
-  if (markAllDone) {
-    markAllDone.addEventListener('click', () => {
+  if (globalMarkAllDone) {
+    globalMarkAllDone.addEventListener('click', () => {
       setTreeDone(nodesRaw.children, true, true);
       saveData(nodesRaw);
       render();
+      document.getElementById('global-context')?.classList.remove('open');
     });
   }
 
-  if (markAllNotDone) {
-    markAllNotDone.addEventListener('click', () => {
+  if (globalMarkAllNotDone) {
+    globalMarkAllNotDone.addEventListener('click', () => {
       setTreeDone(nodesRaw.children, false, true);
       saveData(nodesRaw);
       render();
+      document.getElementById('global-context')?.classList.remove('open');
     });
   }
 
