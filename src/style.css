@@ -172,3 +172,7 @@ body.menu-open .context-menu,
 body.menu-open .context-toggle {
   pointer-events: auto;
 }
+
+body.menu-open .context-menu * {
+  pointer-events: auto;
+}
