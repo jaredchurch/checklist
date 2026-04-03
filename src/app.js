@@ -141,6 +141,28 @@ function setTreeDone(nodes, done, includeDescendants = true) {
   }
 }
 
+function getDescendantItemSummary(node) {
+  let done = 0;
+  let total = 0;
+
+  function recurse(n) {
+    for (const c of n.children || []) {
+      if (c.type === 'item') {
+        total += 1;
+        if (c.done) done += 1;
+      } else if (c.type === 'list') {
+        recurse(c);
+      }
+    }
+  }
+
+  if (node.type === 'list') {
+    recurse(node);
+  }
+
+  return { done, total };
+}
+
 function setLevelDone(nodes, level, done) {
   if (level === 0) {
     for (const n of nodes) {
@@ -297,14 +319,26 @@ function renderTree(nodes, container, level = 0) {
     wrapper.append(...elements);
     if (node.type === 'list' && contextMenu) {
       wrapper.appendChild(contextMenu);
-    }
-    li.appendChild(wrapper);
 
-    if (node.type === 'list' && node.children.length > 0) {
-      const childContainer = document.createElement('div');
-      renderTree(node.children, childContainer, level + 1);
-      li.appendChild(childContainer);
+      const summary = getDescendantItemSummary(node);
+      const summaryEl = document.createElement('span');
+      summaryEl.textContent = `(${summary.done} / ${summary.total})`;
+      summaryEl.style.marginLeft = '0.5rem';
+      wrapper.appendChild(summaryEl);
+
+      const drillButton = document.createElement('button');
+      drillButton.textContent = 'Drill In';
+      drillButton.className = 'small-button';
+      drillButton.addEventListener('click', () => {
+        if (node.type === 'list') {
+          currentPath.push(node.id);
+          render();
+        }
+      });
+      wrapper.appendChild(drillButton);
     }
+
+    li.appendChild(wrapper);
     ul.appendChild(li);
   }
   container.appendChild(ul);
@@ -320,11 +354,63 @@ function findParent(root, childId, parent = null) {
 }
 
 let nodesRaw = getData();
+let currentPath = [];
+
+function getCurrentParentNode() {
+  if (currentPath.length === 0) return nodesRaw;
+  const node = findNodeById(nodesRaw, currentPath[currentPath.length - 1]);
+  return node || nodesRaw;
+}
+
+function getCurrentNodes() {
+  const parent = getCurrentParentNode();
+  return Array.isArray(parent.children) ? parent.children : [];
+}
 
 function render() {
   const container = document.getElementById('tree');
   if (!container) return;
-  renderTree(nodesRaw.children, container);
+
+  const breadcrumb = document.getElementById('breadcrumb');
+  if (breadcrumb) {
+    breadcrumb.innerHTML = '';
+    const home = document.createElement('button');
+    home.textContent = 'Home';
+    home.addEventListener('click', () => {
+      currentPath = [];
+      render();
+    });
+    breadcrumb.appendChild(home);
+
+    let pathNodes = [];
+    let node = nodesRaw;
+    currentPath.forEach((id) => {
+      node = findNodeById(node, id);
+      if (node) pathNodes.push(node);
+    });
+
+    pathNodes.forEach((pNode) => {
+      const sep = document.createElement('span');
+      sep.textContent = ' / ';
+      breadcrumb.appendChild(sep);
+
+      const segment = document.createElement('button');
+      segment.textContent = pNode.title;
+      segment.addEventListener('click', () => {
+        const idx = currentPath.indexOf(pNode.id);
+        if (idx === -1) return;
+        currentPath = currentPath.slice(0, idx + 1);
+        render();
+      });
+      breadcrumb.appendChild(segment);
+    });
+  }
+
+  renderTree(getCurrentNodes(), container);
+  const back = document.getElementById('back-up');
+  if (back) {
+    back.style.display = currentPath.length > 0 ? 'inline-block' : 'none';
+  }
 }
 
 function registerControls() {
@@ -335,7 +421,9 @@ function registerControls() {
 
   if (addItem) {
     addItem.addEventListener('click', () => {
-      nodesRaw.children.push(createNode());
+      const parent = getCurrentParentNode();
+      parent.children = parent.children || [];
+      parent.children.push(createNode());
       saveData(nodesRaw);
       render();
     });
@@ -343,7 +431,9 @@ function registerControls() {
 
   if (addList) {
     addList.addEventListener('click', () => {
-      nodesRaw.children.push(createListNode());
+      const parent = getCurrentParentNode();
+      parent.children = parent.children || [];
+      parent.children.push(createListNode());
       saveData(nodesRaw);
       render();
     });
@@ -366,7 +456,15 @@ function registerControls() {
       document.getElementById('global-context')?.classList.remove('open');
     });
   }
-
+  if (backUp) {
+    backUp.addEventListener('click', () => {
+      if (currentPath.length > 0) {
+        currentPath.pop();
+        render();
+      }
+    });
+  }
+  const backUp = document.getElementById('back-up');
   const globalContextToggle = document.getElementById('global-context-toggle');
   const globalContext = document.getElementById('global-context');
   const globalExport = document.getElementById('global-export');

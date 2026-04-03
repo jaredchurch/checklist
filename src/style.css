@@ -83,6 +83,23 @@ input[type="file"]:hover {
 .tree-item {
   position: relative;
 }
+.breadcrumb {
+  margin-bottom: .75rem;
+  font-size: .9rem;
+}
+.breadcrumb button {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  padding: 0 .25rem;
+  cursor: pointer;
+}
+.breadcrumb button:hover {
+  text-decoration: underline;
+}
+.breadcrumb span {
+  color: #6b7280;
+}
 .context-menu {
   position: absolute;
   top: 110%;
