@@ -176,3 +176,4 @@ body.menu-open .context-toggle {
 body.menu-open .context-menu * {
   pointer-events: auto;
 }
+.summary { font-size: 0.8rem; color: #666; white-space: nowrap; flex-shrink: 0; }

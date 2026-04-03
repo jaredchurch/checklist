@@ -248,14 +248,15 @@ function renderTree(nodes, container, level = 0) {
 
     const elements = [actionControl, titleInput, removeButton];
 
-    wrapper.append(...elements);
     if (node.type === 'list') {
       const summary = getDescendantItemSummary(node);
       const summaryEl = document.createElement('span');
-      summaryEl.textContent = `(${summary.done} / ${summary.total})`;
-      summaryEl.style.marginLeft = '0.5rem';
-      wrapper.appendChild(summaryEl);
+      summaryEl.className = 'summary';
+      summaryEl.textContent = `(${summary.done}/${summary.total})`;
+      elements.splice(2, 0, summaryEl); // insert before removeButton
     }
+
+    wrapper.append(...elements);
 
     li.appendChild(wrapper);
     ul.appendChild(li);
