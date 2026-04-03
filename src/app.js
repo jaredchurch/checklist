@@ -448,6 +448,8 @@ function registerControls() {
     });
   }
 
+  const backUp = document.getElementById('back-up');
+
   if (globalMarkAllNotDone) {
     globalMarkAllNotDone.addEventListener('click', () => {
       setTreeDone(nodesRaw.children, false, true);
@@ -456,6 +458,7 @@ function registerControls() {
       document.getElementById('global-context')?.classList.remove('open');
     });
   }
+
   if (backUp) {
     backUp.addEventListener('click', () => {
       if (currentPath.length > 0) {
@@ -464,7 +467,7 @@ function registerControls() {
       }
     });
   }
-  const backUp = document.getElementById('back-up');
+
   const globalContextToggle = document.getElementById('global-context-toggle');
   const globalContext = document.getElementById('global-context');
   const globalExport = document.getElementById('global-export');
