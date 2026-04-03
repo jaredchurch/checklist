@@ -372,16 +372,10 @@ function renderTree(nodes, container, level = 0) {
             array.splice(idx + 1, 0, createNode());
             saveData(nodesRaw);
             render();
-            // Focus the new item
-            setTimeout(() => {
-              const inputs = document.querySelectorAll('#tree-content input.label');
-              const newInput = inputs[idx + 1];
-              if (newInput) {
-                newInput.focus();
-                newInput.select();
-                setTimeout(() => newInput.focus(), 10);
-              }
-            }, 100);
+            // Focus the new item immediately so iOS can show the keyboard.
+            const inputs = document.querySelectorAll('#tree-content input.label');
+            const newInput = inputs[idx + 1];
+            focusLabelInput(newInput);
           }
         } else if (node.type === 'list') {
           // Drill into list and create new item
@@ -392,16 +386,10 @@ function renderTree(nodes, container, level = 0) {
             listNode.children.push(createNode());
             saveData(nodesRaw);
             render();
-            // Focus the new item in the sub-list
-            setTimeout(() => {
-              const inputs = document.querySelectorAll('#tree-content input.label');
-              const lastInput = inputs[inputs.length - 1];
-              if (lastInput) {
-                lastInput.focus();
-                lastInput.select();
-                setTimeout(() => lastInput.focus(), 10);
-              }
-            }, 100);
+            // Focus the new item in the sub-list immediately so iOS can show the keyboard.
+            const inputs = document.querySelectorAll('#tree-content input.label');
+            const lastInput = inputs[inputs.length - 1];
+            focusLabelInput(lastInput);
           } else {
             render();
           }
@@ -576,6 +564,12 @@ function render() {
   }
 }
 
+function focusLabelInput(input) {
+  if (!input) return;
+  input.focus();
+  input.select();
+}
+
 function registerControls() {
   const backUp = document.getElementById('back-up');
   const addItem = document.getElementById('add-item');
@@ -591,16 +585,10 @@ function registerControls() {
       parent.children.push(newNode);
       saveData(nodesRaw);
       render();
-      // Focus the new item
-      setTimeout(() => {
-        const inputs = document.querySelectorAll('#tree-content input.label');
-        const lastInput = inputs[inputs.length - 1];
-        if (lastInput) {
-          lastInput.focus();
-          lastInput.select();
-          setTimeout(() => lastInput.focus(), 10);
-        }
-      }, 100);
+      // Focus the new item immediately so iOS can show the keyboard.
+      const inputs = document.querySelectorAll('#tree-content input.label');
+      const lastInput = inputs[inputs.length - 1];
+      focusLabelInput(lastInput);
     });
   }
 
@@ -612,16 +600,10 @@ function registerControls() {
       parent.children.push(newNode);
       saveData(nodesRaw);
       render();
-      // Focus the new list
-      setTimeout(() => {
-        const inputs = document.querySelectorAll('#tree-content input.label');
-        const lastInput = inputs[inputs.length - 1];
-        if (lastInput) {
-          lastInput.focus();
-          lastInput.select();
-          setTimeout(() => lastInput.focus(), 10);
-        }
-      }, 100);
+      // Focus the new list immediately so iOS can show the keyboard.
+      const inputs = document.querySelectorAll('#tree-content input.label');
+      const lastInput = inputs[inputs.length - 1];
+      focusLabelInput(lastInput);
     });
   }
 
