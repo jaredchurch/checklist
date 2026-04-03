@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData, renderTree, sanitizeTree } from '../app.js';
+import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData, renderTree, sanitizeTree, sortNodeChildren } from '../app.js';
 
 describe('Checklist core logic', () => {
   let root;
@@ -86,6 +86,54 @@ describe('Checklist core logic', () => {
     expect(sanitized.children[0].id).not.toBe('a');
     expect(sanitized.children[1].id).toEqual(expect.any(String));
     expect(new Set([sanitized.id, sanitized.children[0].id, sanitized.children[1].id]).size).toBe(3);
+  });
+
+  it('sortNodeChildren orders incomplete items and lists first while preserving manual order', () => {
+    const root = createListNode('Root');
+    const itemA = createNode('Item A');
+    const itemB = createNode('Item B');
+    const listA = createListNode('List A');
+    const listB = createListNode('List B');
+
+    itemA.done = false;
+    itemB.done = true;
+
+    const nested = createNode('Nested Item');
+    nested.done = true;
+    listA.children.push(nested);
+
+    listB.children.push(createNode('Incomplete'));
+
+    root.children.push(itemA, listA, itemB, listB);
+
+    sortNodeChildren(root);
+
+    expect(root.children[0]).toBe(listB);
+    expect(root.children[1]).toBe(itemA);
+    expect(root.children[2]).toBe(listA);
+    expect(root.children[3]).toBe(itemB);
+  });
+
+  it('sortNodeChildren preserves original creation order when an item is toggled back to incomplete', () => {
+    const root = createListNode('Root');
+    const itemA = createNode('Item A');
+    const itemC = createNode('Item C');
+    const itemB = createNode('Item B');
+
+    itemA.done = false;
+    itemC.done = true;
+    itemB.done = false;
+
+    root.children.push(itemA, itemC, itemB);
+
+    expect(root.children.map((n) => n.title)).toEqual(['Item A', 'Item C', 'Item B']);
+
+    sortNodeChildren(root);
+    expect(root.children.map((n) => n.title)).toEqual(['Item A', 'Item B', 'Item C']);
+
+    itemC.done = false;
+    sortNodeChildren(root);
+    expect(root.children.map((n) => n.title)).toEqual(['Item A', 'Item C', 'Item B']);
   });
 
   it('renderTree does not add descendant action buttons on item nodes', () => {

@@ -1,7 +1,12 @@
 const KEY = 'checklist-pwa-data-v1';
+let nextOrder = 1;
 
 function uid() {
   return "x" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+function getNextOrder() {
+  return nextOrder++;
 }
 
 function createNode(title = 'New item') {
@@ -11,6 +16,7 @@ function createNode(title = 'New item') {
     title,
     done: false,
     children: [],
+    order: getNextOrder(),
     isNew: true
   };
 }
@@ -21,6 +27,7 @@ function createListNode(title = 'New list') {
     type: 'list',
     title,
     children: [],
+    order: getNextOrder(),
     isNew: true
   };
 }
@@ -46,6 +53,12 @@ function sanitizeTree(node, existingIds = new Set()) {
     node.id = uid();
   }
   existingIds.add(node.id);
+
+  if (typeof node.order !== 'number' || !Number.isFinite(node.order)) {
+    node.order = getNextOrder();
+  } else {
+    nextOrder = Math.max(nextOrder, node.order + 1);
+  }
 
   if (node.type === 'item') {
     node.children = [];
@@ -238,6 +251,44 @@ function getDescendantItemSummary(node) {
   return { done, total };
 }
 
+function isNodeComplete(node) {
+  if (node.type === 'item') {
+    return node.done === true;
+  }
+
+  if (node.type === 'list') {
+    const summary = getDescendantItemSummary(node);
+    return summary.total > 0 && summary.done === summary.total;
+  }
+
+  return false;
+}
+
+function sortNodeChildren(node) {
+  if (!node || node.type !== 'list' || !Array.isArray(node.children)) return;
+
+  node.children = node.children
+    .map((child, index) => ({ child, index }))
+    .sort((a, b) => {
+      const completeA = isNodeComplete(a.child) ? 1 : 0;
+      const completeB = isNodeComplete(b.child) ? 1 : 0;
+      if (completeA !== completeB) return completeA - completeB;
+
+      const typeA = a.child.type === 'list' ? 0 : 1;
+      const typeB = b.child.type === 'list' ? 0 : 1;
+      if (typeA !== typeB) return typeA - typeB;
+
+      return (a.child.order ?? a.index) - (b.child.order ?? b.index);
+    })
+    .map((entry) => entry.child);
+
+  for (const child of node.children) {
+    if (child.type === 'list') {
+      sortNodeChildren(child);
+    }
+  }
+}
+
 function setLevelDone(nodes, level, done) {
   if (level === 0) {
     for (const n of nodes) {
@@ -257,7 +308,7 @@ function setLevelDone(nodes, level, done) {
 function renderTree(nodes, container, level = 0) {
   container.innerHTML = '';
   const ul = document.createElement('ul');
-  for (const node of nodes) {
+  nodes.forEach((node, index) => {
     if (node.type === 'item') {
       node.children = []; // Enforce no descendants on item nodes
     }
@@ -275,6 +326,8 @@ function renderTree(nodes, container, level = 0) {
       actionControl.checked = node.done;
       actionControl.addEventListener('change', () => {
         node.done = actionControl.checked;
+        const currentNode = getCurrentParentNode();
+        sortNodeChildren(currentNode);
         saveData(nodesRaw);
         render();
       });
@@ -366,6 +419,50 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
+    const upButton = document.createElement('button');
+    upButton.textContent = '↑';
+    upButton.className = 'small-button';
+    upButton.style.minWidth = '1rem';
+    upButton.style.marginRight = '0.5rem';
+    upButton.title = 'Move Up';
+    upButton.addEventListener('click', () => {
+      const parent = findParent(nodesRaw, node.id);
+      const array = parent ? parent.children : nodesRaw.children;
+      const idx = array.findIndex((c) => c.id === node.id);
+      if (idx > 0) {
+        // Swap orders
+        const tempOrder = array[idx].order;
+        array[idx].order = array[idx - 1].order;
+        array[idx - 1].order = tempOrder;
+        // Re-sort the parent
+        sortNodeChildren(parent || nodesRaw);
+        saveData(nodesRaw);
+        render();
+      }
+    });
+
+    const downButton = document.createElement('button');
+    downButton.textContent = '↓';
+    downButton.className = 'small-button';
+    downButton.style.minWidth = '1rem';
+    downButton.style.marginRight = '0.5rem';
+    downButton.title = 'Move Down';
+    downButton.addEventListener('click', () => {
+      const parent = findParent(nodesRaw, node.id);
+      const array = parent ? parent.children : nodesRaw.children;
+      const idx = array.findIndex((c) => c.id === node.id);
+      if (idx < array.length - 1) {
+        // Swap orders
+        const tempOrder = array[idx].order;
+        array[idx].order = array[idx + 1].order;
+        array[idx + 1].order = tempOrder;
+        // Re-sort the parent
+        sortNodeChildren(parent || nodesRaw);
+        saveData(nodesRaw);
+        render();
+      }
+    });
+
     const removeButton = document.createElement('button');
     removeButton.textContent = 'Delete';
     removeButton.className = 'small-button';
@@ -380,21 +477,24 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const elements = [actionControl, titleInput, removeButton];
+    upButton.disabled = index === 0;
+    downButton.disabled = index === nodes.length - 1;
+
+    const elements = [actionControl, titleInput, upButton, downButton, removeButton];
 
     if (node.type === 'list') {
       const summary = getDescendantItemSummary(node);
       const summaryEl = document.createElement('span');
       summaryEl.className = 'summary';
       summaryEl.textContent = `(${summary.done}/${summary.total})`;
-      elements.splice(2, 0, summaryEl); // insert before removeButton
+      elements.splice(2, 0, summaryEl); // insert before upButton
     }
 
     wrapper.append(...elements);
 
     li.appendChild(wrapper);
     ul.appendChild(li);
-  }
+  });
   container.appendChild(ul);
 }
 
@@ -523,6 +623,8 @@ function registerControls() {
   if (globalMarkAllDone) {
     globalMarkAllDone.addEventListener('click', () => {
       setTreeDone(getCurrentNodes(), true, true);
+      const currentNode = getCurrentParentNode();
+      sortNodeChildren(currentNode);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -532,6 +634,8 @@ function registerControls() {
   if (globalMarkAllNotDone) {
     globalMarkAllNotDone.addEventListener('click', () => {
       setTreeDone(getCurrentNodes(), false, true);
+      const currentNode = getCurrentParentNode();
+      sortNodeChildren(currentNode);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -542,6 +646,9 @@ function registerControls() {
     backUp.addEventListener('click', () => {
       if (currentPath.length > 0) {
         currentPath.pop();
+        const currentNode = getCurrentParentNode();
+        sortNodeChildren(currentNode);
+        saveData(nodesRaw);
         render();
       }
     });
@@ -818,6 +925,7 @@ export {
   findNodeById,
   findParent,
   sanitizeTree,
+  sortNodeChildren,
   render,
   renderTree
 };
