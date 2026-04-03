@@ -260,78 +260,78 @@ function renderTree(nodes, container, level = 0) {
       if (contextMenu) contextMenu.appendChild(button);
     };
 
-    if (node.type === 'list') {
-      const contextToggle = document.createElement('button');
-      contextToggle.textContent = '⋮';
-      contextToggle.className = 'small-button context-toggle';
+    // if (node.type === 'list') {
+    //   const contextToggle = document.createElement('button');
+    //   contextToggle.textContent = '⋮';
+    //   contextToggle.className = 'small-button context-toggle';
 
-      contextMenu = document.createElement('div');
-      contextMenu.className = 'context-menu';
+    //   contextMenu = document.createElement('div');
+    //   contextMenu.className = 'context-menu';
 
-      closeMenu = () => contextMenu.classList.remove('open');
-      contextToggle.addEventListener('click', () => {
-        contextMenu.classList.toggle('open');
-        updateMenuLock();
-      });
+    //   closeMenu = () => contextMenu.classList.remove('open');
+    //   contextToggle.addEventListener('click', () => {
+    //     contextMenu.classList.toggle('open');
+    //     updateMenuLock();
+    //   });
 
-      elements.push(contextToggle);
-      const addChildItem = document.createElement('button');
-      addChildItem.textContent = '+Item';
-      addChildItem.addEventListener('click', () => {
-        node.children.push(createNode());
-        saveData(nodesRaw);
-        render();
-      });
+    //   elements.push(contextToggle);
+    //   const addChildItem = document.createElement('button');
+    //   addChildItem.textContent = '+Item';
+    //   addChildItem.addEventListener('click', () => {
+    //     node.children.push(createNode());
+    //     saveData(nodesRaw);
+    //     render();
+    //   });
 
-      const addChildList = document.createElement('button');
-      addChildList.textContent = '+Sub-list';
-      addChildList.addEventListener('click', () => {
-        node.children.push(createListNode());
-        saveData(nodesRaw);
-        render();
-      });
+    //   const addChildList = document.createElement('button');
+    //   addChildList.textContent = '+Sub-list';
+    //   addChildList.addEventListener('click', () => {
+    //     node.children.push(createListNode());
+    //     saveData(nodesRaw);
+    //     render();
+    //   });
 
-      const childDoneAll = document.createElement('button');
-      childDoneAll.textContent = 'Set Descendants Done';
-      childDoneAll.addEventListener('click', () => {
-        setTreeDone([node], true, true);
-        saveData(nodesRaw);
-        render();
-      });
+    //   const childDoneAll = document.createElement('button');
+    //   childDoneAll.textContent = 'Set Descendants Done';
+    //   childDoneAll.addEventListener('click', () => {
+    //     setTreeDone([node], true, true);
+    //     saveData(nodesRaw);
+    //     render();
+    //   });
 
-      const childNotDoneAll = document.createElement('button');
-      childNotDoneAll.textContent = 'Set Descendants Not Done';
-      childNotDoneAll.addEventListener('click', () => {
-        setTreeDone([node], false, true);
-        saveData(nodesRaw);
-        render();
-      });
+    //   const childNotDoneAll = document.createElement('button');
+    //   childNotDoneAll.textContent = 'Set Descendants Not Done';
+    //   childNotDoneAll.addEventListener('click', () => {
+    //     setTreeDone([node], false, true);
+    //     saveData(nodesRaw);
+    //     render();
+    //   });
 
-      const thisLevelDone = document.createElement('button');
-      thisLevelDone.textContent = 'Level Done';
-      thisLevelDone.addEventListener('click', () => {
-        setTreeDone(node.children, true, false);
-        saveData(nodesRaw);
-        render();
-      });
+    //   const thisLevelDone = document.createElement('button');
+    //   thisLevelDone.textContent = 'Level Done';
+    //   thisLevelDone.addEventListener('click', () => {
+    //     setTreeDone(node.children, true, false);
+    //     saveData(nodesRaw);
+    //     render();
+    //   });
 
-      const thisLevelNotDone = document.createElement('button');
-      thisLevelNotDone.textContent = 'Level Not Done';
-      thisLevelNotDone.addEventListener('click', () => {
-        setTreeDone(node.children, false, false);
-        saveData(nodesRaw);
-        render();
-      });
+    //   const thisLevelNotDone = document.createElement('button');
+    //   thisLevelNotDone.textContent = 'Level Not Done';
+    //   thisLevelNotDone.addEventListener('click', () => {
+    //     setTreeDone(node.children, false, false);
+    //     saveData(nodesRaw);
+    //     render();
+    //   });
 
-      addMenuAction(addChildItem);
-      addMenuAction(addChildList);
-      addMenuAction(childDoneAll);
-      addMenuAction(childNotDoneAll);
-      if (level > 0) {
-        addMenuAction(thisLevelDone);
-        addMenuAction(thisLevelNotDone);
-      }
-    }
+    //   addMenuAction(addChildItem);
+    //   addMenuAction(addChildList);
+    //   addMenuAction(childDoneAll);
+    //   addMenuAction(childNotDoneAll);
+    //   if (level > 0) {
+    //     addMenuAction(thisLevelDone);
+    //     addMenuAction(thisLevelNotDone);
+    //   }
+    // }
 
     wrapper.append(...elements);
     if (node.type === 'list' && contextMenu) {
