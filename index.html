@@ -29,15 +29,22 @@
               <button id="global-mark-all-not-done">Mark All Not Done</button>
               <button id="global-export">Export JSON</button>
               <button id="global-import">Import JSON</button>
+              <button id="global-about">About</button>
             </div>
           </div>
         </section>
 
         <section id="tree" class="tree"></section>
+
+        <dialog id="about-dialog" class="about-dialog" aria-label="About Checklist">
+          <h2>About Checklist PWA</h2>
+          <p>This checklist app persists data locally and syncs via service worker caching. The current version info is pulled from the branch used by GitHub Pages.</p>
+          <div id="about-commit-info">Loading commit info...</div>
+          <button id="close-about">Close</button>
+        </dialog>
       </main>
       <footer>
         <small>Installed data is saved locally in LocalStorage and persisted by service worker caching.</small>
-        <div id="commit-info" class="commit-info">Loading commit info...</div>
       </footer>
     </div>
 

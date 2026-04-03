@@ -398,10 +398,35 @@ function registerControls() {
     });
   }
 
+  const globalAbout = document.getElementById('global-about');
+  const aboutDialog = document.getElementById('about-dialog');
+  const aboutCommitInfo = document.getElementById('about-commit-info');
+  const closeAbout = document.getElementById('close-about');
+
+  if (globalAbout && aboutDialog && aboutCommitInfo) {
+    globalAbout.addEventListener('click', async () => {
+      if (typeof aboutDialog.showModal === 'function') {
+        aboutDialog.showModal();
+      } else {
+        aboutDialog.style.display = 'block';
+      }
+      aboutCommitInfo.textContent = 'Loading commit info...';
+      await fetchCommitInfo();
+      globalContext?.classList.remove('open');
+    });
+  }
+
+  if (closeAbout && aboutDialog) {
+    closeAbout.addEventListener('click', () => {
+      aboutDialog.close?.();
+      aboutDialog.style.display = 'none';
+    });
+  }
+
 }
 
 async function fetchCommitInfo() {
-  const el = document.getElementById('commit-info');
+  const el = document.getElementById('about-commit-info') || document.getElementById('commit-info');
   if (!el) return;
 
   const repoOwner = 'jaredchurch';
