@@ -600,6 +600,7 @@ function registerControls() {
     aboutCommitInfo.textContent = 'Loading commit info...';
     await fetchCommitInfo();
     globalContext?.classList.remove('open');
+    updateMenuLock();
   };
 
   const closeAboutDialog = () => {
@@ -626,7 +627,10 @@ function registerControls() {
   }
 
   if (closeAbout) {
-    closeAbout.addEventListener('click', closeAboutDialog);
+    closeAbout.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      closeAboutDialog();
+    });
   }
 
   // Import dialog functionality
@@ -661,6 +665,9 @@ function registerControls() {
     });
     document.body.appendChild(input);
     input.click();
+
+    // Make sure any residual menu-open state doesn't block the dialog
+    updateMenuLock();
   };
 
   const closeImportDialog = () => {
@@ -670,7 +677,8 @@ function registerControls() {
   };
 
   if (importReplace) {
-    importReplace.addEventListener('click', () => {
+    importReplace.addEventListener('click', (evt) => {
+      evt.stopPropagation();
       if (importFileData) {
         nodesRaw = sanitizeTree(importFileData);
         saveData(nodesRaw);
@@ -682,7 +690,8 @@ function registerControls() {
   }
 
   if (importSublist) {
-    importSublist.addEventListener('click', () => {
+    importSublist.addEventListener('click', (evt) => {
+      evt.stopPropagation();
       if (importFileData) {
         const currentNode = getCurrentParentNode();
         currentNode.children = currentNode.children || [];
@@ -695,7 +704,10 @@ function registerControls() {
   }
 
   if (cancelImport) {
-    cancelImport.addEventListener('click', closeImportDialog);
+    cancelImport.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      closeImportDialog();
+    });
   }
 
   if (importDialog) {
