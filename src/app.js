@@ -403,24 +403,42 @@ function registerControls() {
   const aboutCommitInfo = document.getElementById('about-commit-info');
   const closeAbout = document.getElementById('close-about');
 
-  if (globalAbout && aboutDialog && aboutCommitInfo) {
-    globalAbout.addEventListener('click', async () => {
-      if (typeof aboutDialog.showModal === 'function') {
-        aboutDialog.showModal();
-      } else {
-        aboutDialog.style.display = 'block';
+  const openAbout = async () => {
+    if (!aboutDialog || !aboutCommitInfo) return;
+
+    if (aboutDialog instanceof HTMLDialogElement) {
+      if (!aboutDialog.open) {
+        try {
+          aboutDialog.showModal();
+        } catch (err) {
+          console.warn('About dialog showModal failed, using fallback', err);
+          aboutDialog.style.display = 'block';
+        }
       }
-      aboutCommitInfo.textContent = 'Loading commit info...';
-      await fetchCommitInfo();
-      globalContext?.classList.remove('open');
-    });
+    } else {
+      aboutDialog.style.display = 'block';
+    }
+
+    aboutCommitInfo.textContent = 'Loading commit info...';
+    await fetchCommitInfo();
+    globalContext?.classList.remove('open');
+  };
+
+  const closeAboutDialog = () => {
+    if (!aboutDialog) return;
+
+    if (aboutDialog instanceof HTMLDialogElement && aboutDialog.open) {
+      aboutDialog.close();
+    }
+    aboutDialog.style.display = 'none';
+  };
+
+  if (globalAbout) {
+    globalAbout.addEventListener('click', openAbout);
   }
 
-  if (closeAbout && aboutDialog) {
-    closeAbout.addEventListener('click', () => {
-      aboutDialog.close?.();
-      aboutDialog.style.display = 'none';
-    });
+  if (closeAbout) {
+    closeAbout.addEventListener('click', closeAboutDialog);
   }
 
 }
