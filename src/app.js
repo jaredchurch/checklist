@@ -63,6 +63,11 @@ function saveData(data) {
 
 let importFileInput = null;
 
+function updateMenuLock() {
+  const anyOpen = document.querySelector('.context-menu.open');
+  document.body.classList.toggle('menu-open', !!anyOpen);
+}
+
 function exportData() {
   const dataString = JSON.stringify(nodesRaw, null, 2);
   const blob = new Blob([dataString], { type: 'application/json' });
@@ -141,6 +146,28 @@ function setTreeDone(nodes, done, includeDescendants = true) {
   }
 }
 
+function getDescendantItemSummary(node) {
+  let done = 0;
+  let total = 0;
+
+  function recurse(n) {
+    for (const c of n.children || []) {
+      if (c.type === 'item') {
+        total += 1;
+        if (c.done) done += 1;
+      } else if (c.type === 'list') {
+        recurse(c);
+      }
+    }
+  }
+
+  if (node.type === 'list') {
+    recurse(node);
+  }
+
+  return { done, total };
+}
+
 function setLevelDone(nodes, level, done) {
   if (level === 0) {
     for (const n of nodes) {
@@ -169,22 +196,33 @@ function renderTree(nodes, container, level = 0) {
     const wrapper = document.createElement('div');
     wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
 
-    const checkbox = document.createElement('input');
+    const titleInput = document.createElement('input');
+
+    const actionControl = document.createElement(node.type === 'item' ? 'input' : 'button');
+
     if (node.type === 'item') {
-      checkbox.type = 'checkbox';
-      checkbox.checked = node.done;
-      checkbox.addEventListener('change', () => {
-        node.done = checkbox.checked;
+      actionControl.type = 'checkbox';
+      actionControl.checked = node.done;
+      actionControl.addEventListener('change', () => {
+        node.done = actionControl.checked;
         saveData(nodesRaw);
         render();
       });
+      actionControl.style.minWidth = '1rem';
+      actionControl.style.marginRight = '0.5rem';
     } else {
-      checkbox.type = 'checkbox';
-      checkbox.disabled = true;
-      checkbox.title = 'Sub-list has no done state';
+      actionControl.textContent = '↓';
+      actionControl.className = 'small-button';
+      actionControl.style.minWidth = '1rem';
+      actionControl.style.marginRight = '0.5rem';
+      actionControl.title = 'Drill In';
+      actionControl.addEventListener('click', () => {
+        currentPath.push(node.id);
+        render();
+      });
     }
 
-    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
     titleInput.type = 'text';
     titleInput.value = node.title;
     titleInput.className = 'label';
@@ -208,103 +246,19 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const elements = [checkbox, titleInput, removeButton];
-
-    let contextMenu = null;
-    let closeMenu = null;
-
-    const addMenuAction = (button) => {
-      button.className = 'small-button';
-      button.style.width = '100%';
-      button.addEventListener('click', () => {
-        if (closeMenu) closeMenu();
-      });
-      if (contextMenu) contextMenu.appendChild(button);
-    };
+    const elements = [actionControl, titleInput, removeButton];
 
     if (node.type === 'list') {
-      const contextToggle = document.createElement('button');
-      contextToggle.textContent = '⋮';
-      contextToggle.className = 'small-button';
-
-      contextMenu = document.createElement('div');
-      contextMenu.className = 'context-menu';
-
-      closeMenu = () => contextMenu.classList.remove('open');
-      contextToggle.addEventListener('click', () => {
-        contextMenu.classList.toggle('open');
-      });
-
-      elements.push(contextToggle);
-      const addChildItem = document.createElement('button');
-      addChildItem.textContent = '+Item';
-      addChildItem.addEventListener('click', () => {
-        node.children.push(createNode());
-        saveData(nodesRaw);
-        render();
-      });
-
-      const addChildList = document.createElement('button');
-      addChildList.textContent = '+Sub-list';
-      addChildList.addEventListener('click', () => {
-        node.children.push(createListNode());
-        saveData(nodesRaw);
-        render();
-      });
-
-      const childDoneAll = document.createElement('button');
-      childDoneAll.textContent = 'Set Descendants Done';
-      childDoneAll.addEventListener('click', () => {
-        setTreeDone([node], true, true);
-        saveData(nodesRaw);
-        render();
-      });
-
-      const childNotDoneAll = document.createElement('button');
-      childNotDoneAll.textContent = 'Set Descendants Not Done';
-      childNotDoneAll.addEventListener('click', () => {
-        setTreeDone([node], false, true);
-        saveData(nodesRaw);
-        render();
-      });
-
-      const thisLevelDone = document.createElement('button');
-      thisLevelDone.textContent = 'Level Done';
-      thisLevelDone.addEventListener('click', () => {
-        setTreeDone(node.children, true, false);
-        saveData(nodesRaw);
-        render();
-      });
-
-      const thisLevelNotDone = document.createElement('button');
-      thisLevelNotDone.textContent = 'Level Not Done';
-      thisLevelNotDone.addEventListener('click', () => {
-        setTreeDone(node.children, false, false);
-        saveData(nodesRaw);
-        render();
-      });
-
-      addMenuAction(addChildItem);
-      addMenuAction(addChildList);
-      addMenuAction(childDoneAll);
-      addMenuAction(childNotDoneAll);
-      if (level > 0) {
-        addMenuAction(thisLevelDone);
-        addMenuAction(thisLevelNotDone);
-      }
+      const summary = getDescendantItemSummary(node);
+      const summaryEl = document.createElement('span');
+      summaryEl.className = 'summary';
+      summaryEl.textContent = `(${summary.done}/${summary.total})`;
+      elements.splice(2, 0, summaryEl); // insert before removeButton
     }
 
     wrapper.append(...elements);
-    if (node.type === 'list' && contextMenu) {
-      wrapper.appendChild(contextMenu);
-    }
-    li.appendChild(wrapper);
 
-    if (node.type === 'list' && node.children.length > 0) {
-      const childContainer = document.createElement('div');
-      renderTree(node.children, childContainer, level + 1);
-      li.appendChild(childContainer);
-    }
+    li.appendChild(wrapper);
     ul.appendChild(li);
   }
   container.appendChild(ul);
@@ -320,14 +274,73 @@ function findParent(root, childId, parent = null) {
 }
 
 let nodesRaw = getData();
+let currentPath = [];
+
+function getCurrentParentNode() {
+  if (currentPath.length === 0) return nodesRaw;
+  const node = findNodeById(nodesRaw, currentPath[currentPath.length - 1]);
+  return node || nodesRaw;
+}
+
+function getCurrentNodes() {
+  const parent = getCurrentParentNode();
+  return Array.isArray(parent.children) ? parent.children : [];
+}
 
 function render() {
-  const container = document.getElementById('tree');
+  const container = document.getElementById('tree-content');
   if (!container) return;
-  renderTree(nodesRaw.children, container);
+
+  const breadcrumb = document.getElementById('breadcrumb');
+  if (breadcrumb) {
+    breadcrumb.innerHTML = '';
+    const home = document.createElement('button');
+    home.textContent = 'Home';
+    home.addEventListener('click', () => {
+      currentPath = [];
+      render();
+    });
+    breadcrumb.appendChild(home);
+
+    let pathNodes = [];
+    let node = nodesRaw;
+    currentPath.forEach((id) => {
+      node = findNodeById(node, id);
+      if (node) pathNodes.push(node);
+    });
+
+    pathNodes.forEach((pNode) => {
+      const sep = document.createElement('span');
+      sep.textContent = ' / ';
+      breadcrumb.appendChild(sep);
+
+      const segment = document.createElement('button');
+      segment.textContent = pNode.title;
+      segment.addEventListener('click', () => {
+        const idx = currentPath.indexOf(pNode.id);
+        if (idx === -1) return;
+        currentPath = currentPath.slice(0, idx + 1);
+        render();
+      });
+      breadcrumb.appendChild(segment);
+    });
+  }
+
+  renderTree(getCurrentNodes(), container);
+  const back = document.getElementById('back-up');
+  if (back) {
+    if (currentPath.length > 0) {
+      back.classList.remove('hidden');
+      back.style.visibility = 'visible';
+    } else {
+      back.classList.add('hidden');
+      back.style.visibility = 'hidden';
+    }
+  }
 }
 
 function registerControls() {
+  const backUp = document.getElementById('back-up');
   const addItem = document.getElementById('add-item');
   const addList = document.getElementById('add-list');
   const globalMarkAllDone = document.getElementById('global-mark-all-done');
@@ -335,7 +348,9 @@ function registerControls() {
 
   if (addItem) {
     addItem.addEventListener('click', () => {
-      nodesRaw.children.push(createNode());
+      const parent = getCurrentParentNode();
+      parent.children = parent.children || [];
+      parent.children.push(createNode());
       saveData(nodesRaw);
       render();
     });
@@ -343,7 +358,9 @@ function registerControls() {
 
   if (addList) {
     addList.addEventListener('click', () => {
-      nodesRaw.children.push(createListNode());
+      const parent = getCurrentParentNode();
+      parent.children = parent.children || [];
+      parent.children.push(createListNode());
       saveData(nodesRaw);
       render();
     });
@@ -351,7 +368,7 @@ function registerControls() {
 
   if (globalMarkAllDone) {
     globalMarkAllDone.addEventListener('click', () => {
-      setTreeDone(nodesRaw.children, true, true);
+      setTreeDone(getCurrentNodes(), true, true);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -360,10 +377,19 @@ function registerControls() {
 
   if (globalMarkAllNotDone) {
     globalMarkAllNotDone.addEventListener('click', () => {
-      setTreeDone(nodesRaw.children, false, true);
+      setTreeDone(getCurrentNodes(), false, true);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
+    });
+  }
+
+  if (backUp) {
+    backUp.addEventListener('click', () => {
+      if (currentPath.length > 0) {
+        currentPath.pop();
+        render();
+      }
     });
   }
 
@@ -375,12 +401,7 @@ function registerControls() {
   if (globalContextToggle && globalContext) {
     globalContextToggle.addEventListener('click', () => {
       globalContext.classList.toggle('open');
-    });
-
-    document.addEventListener('click', (evt) => {
-      if (!globalContext.contains(evt.target) && evt.target !== globalContextToggle) {
-        globalContext.classList.remove('open');
-      }
+      updateMenuLock();
     });
   }
 
@@ -472,6 +493,18 @@ function registerControls() {
     closeAbout.addEventListener('click', closeAboutDialog);
   }
 
+  // Unified click outside to close all context menus
+  document.addEventListener('click', (evt) => {
+    const target = evt.target;
+    const isInsideMenu = target.closest('.context-menu');
+    const isToggle = target.closest('.context-toggle');
+    if (!isInsideMenu && !isToggle) {
+      // close all open context menus
+      document.querySelectorAll('.context-menu.open').forEach(menu => menu.classList.remove('open'));
+      updateMenuLock();
+    }
+  });
+
 }
 
 async function fetchCommitInfo() {
@@ -511,7 +544,7 @@ async function fetchCommitInfo() {
 }
 
 function init() {
-  document.title = 'Checklist PWA';
+  document.title = 'Checklist';
   registerControls();
   render();
   fetchCommitInfo();

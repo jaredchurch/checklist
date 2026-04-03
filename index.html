@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#2196f3" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/favicon-180.png" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <title>Checklist PWA</title>
+    <title>Checklist</title>
     <link rel="stylesheet" href="src/style.css" />
   </head>
   <body>
@@ -17,27 +17,31 @@
         <h1>Checklist</h1>
       </header>
       <main>
-        <section id="controls" class="controls">
-          <button id="add-item">Add Item</button>
-          <button id="add-list">Add List</button>
+        <nav id="breadcrumb" class="breadcrumb"></nav>
+        <section id="tree" class="tree">
+          <section id="controls" class="controls">
+            <button id="back-up" class="back-up hidden" aria-label="Back">←</button>
+            <button id="add-item">Add Item</button>
+            <button id="add-list">Add List</button>
 
-          <div class="global-context-menu">
-            <button id="global-context-toggle" class="small-button">⋮</button>
-            <div id="global-context" class="context-menu">
-              <button id="global-mark-all-done">Mark All Done</button>
-              <button id="global-mark-all-not-done">Mark All Not Done</button>
-              <button id="global-export">Export JSON</button>
-              <button id="global-import">Import JSON</button>
-              <button id="global-about">About</button>
+            <div class="global-context-menu">
+              <button id="global-context-toggle" class="small-button context-toggle">⋮</button>
+              <div id="global-context" class="context-menu">
+                <button id="global-mark-all-done">Mark All Done</button>
+                <button id="global-mark-all-not-done">Mark All Not Done</button>
+                <button id="global-export">Export JSON</button>
+                <button id="global-import">Import JSON</button>
+                <button id="global-about">About</button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section id="tree" class="tree"></section>
+          <section id="tree-content"></section>
+        </section>
 
         <div id="about-dialog" class="about-dialog" role="dialog" aria-modal="true" aria-labelledby="about-title" aria-describedby="about-desc" style="display:none;">
           <div class="about-content">
-            <h2 id="about-title">About Checklist PWA</h2>
+            <h2 id="about-title">About Checklist</h2>
             <p id="about-desc">This checklist app stores all data locally. The current version info is pulled from the branch used by GitHub Pages.</p>
             <div id="about-commit-info">Loading commit info...</div>
             <button id="close-about">Close</button>

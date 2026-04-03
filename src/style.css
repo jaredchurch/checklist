@@ -27,6 +27,16 @@ header {
   align-items: center;
 }
 
+.controls .back-up {
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.controls .back-up.hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
 .global-context-menu {
   position: relative;
   margin-left: auto;
@@ -83,6 +93,23 @@ input[type="file"]:hover {
 .tree-item {
   position: relative;
 }
+.breadcrumb {
+  margin-bottom: .75rem;
+  font-size: .9rem;
+}
+.breadcrumb button {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  padding: 0 .25rem;
+  cursor: pointer;
+}
+.breadcrumb button:hover {
+  text-decoration: underline;
+}
+.breadcrumb span {
+  color: #6b7280;
+}
 .context-menu {
   position: absolute;
   top: 110%;
@@ -136,3 +163,17 @@ input[type="file"]:hover {
   padding: 0.2rem 0.4rem;
   min-width: 3rem;
 }
+
+body.menu-open * {
+  pointer-events: none;
+}
+
+body.menu-open .context-menu,
+body.menu-open .context-toggle {
+  pointer-events: auto;
+}
+
+body.menu-open .context-menu * {
+  pointer-events: auto;
+}
+.summary { font-size: 0.8rem; color: #666; white-space: nowrap; flex-shrink: 0; }
