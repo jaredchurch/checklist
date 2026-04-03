@@ -404,16 +404,21 @@ async function fetchCommitInfo() {
 
   const repoOwner = 'jaredchurch';
   const repoName = 'checklist';
-  const branch = 'main';
-  const url = `https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`GitHub API ${response.status}`);
-    const commit = await response.json();
+    const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`);
+    if (!repoResp.ok) throw new Error(`Repo info API ${repoResp.status}`);
+    const repoData = await repoResp.json();
+    const branch = repoData.default_branch || 'main';
+
+    const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`);
+    if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`);
+    const commit = await commitResp.json();
+
     const hash = commit.sha.slice(0, 7);
     const date = new Date(commit.commit.committer.date).toLocaleString();
-    el.textContent = `Commit ${hash} @ ${date}`;
+    el.textContent = `Commit ${hash} @ ${date} (${branch})`;
+    return;
   } catch (err) {
     console.warn('Failed to load commit info', err);
     el.textContent = 'Commit info unavailable';
