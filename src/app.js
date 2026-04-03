@@ -408,10 +408,19 @@ async function fetchCommitInfo() {
   const repoName = 'checklist';
 
   try {
-    const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`);
-    if (!repoResp.ok) throw new Error(`Repo info API ${repoResp.status}`);
-    const repoData = await repoResp.json();
-    const branch = repoData.default_branch || 'main';
+    let branch = 'main';
+
+    const pagesResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/pages`);
+    if (pagesResp.ok) {
+      const pagesData = await pagesResp.json();
+      branch = pagesData.source?.branch || branch;
+    } else {
+      const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`);
+      if (repoResp.ok) {
+        const repoData = await repoResp.json();
+        branch = repoData.default_branch || branch;
+      }
+    }
 
     const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`);
     if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`);
