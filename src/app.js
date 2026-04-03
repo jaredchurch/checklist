@@ -403,21 +403,42 @@ function registerControls() {
   const aboutCommitInfo = document.getElementById('about-commit-info');
   const closeAbout = document.getElementById('close-about');
 
+  let lastFocusedElement = null;
+
+  const onAboutKeydown = (evt) => {
+    if (evt.key === 'Escape' && aboutDialog.style.display === 'flex') {
+      evt.preventDefault();
+      closeAboutDialog();
+    }
+
+    if (evt.key === 'Tab' && aboutDialog.style.display === 'flex') {
+      const focusable = aboutDialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const focusArray = Array.from(focusable).filter((el) => !el.hasAttribute('disabled'));
+      const currentIndex = focusArray.indexOf(document.activeElement);
+      let nextIndex = currentIndex;
+
+      if (evt.shiftKey) {
+        nextIndex = currentIndex <= 0 ? focusArray.length - 1 : currentIndex - 1;
+      } else {
+        nextIndex = currentIndex === focusArray.length - 1 ? 0 : currentIndex + 1;
+      }
+
+      evt.preventDefault();
+      focusArray[nextIndex].focus();
+    }
+  };
+
   const openAbout = async () => {
     if (!aboutDialog || !aboutCommitInfo) return;
 
-    if (aboutDialog instanceof HTMLDialogElement) {
-      if (!aboutDialog.open) {
-        try {
-          aboutDialog.showModal();
-        } catch (err) {
-          console.warn('About dialog showModal failed, using fallback', err);
-          aboutDialog.style.display = 'block';
-        }
-      }
-    } else {
-      aboutDialog.style.display = 'block';
-    }
+    lastFocusedElement = document.activeElement;
+    aboutDialog.style.display = 'flex';
+
+    const focusable = aboutDialog.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable) focusable.focus();
+
+    document.addEventListener('keydown', onAboutKeydown);
 
     aboutCommitInfo.textContent = 'Loading commit info...';
     await fetchCommitInfo();
@@ -427,11 +448,21 @@ function registerControls() {
   const closeAboutDialog = () => {
     if (!aboutDialog) return;
 
-    if (aboutDialog instanceof HTMLDialogElement && aboutDialog.open) {
-      aboutDialog.close();
-    }
     aboutDialog.style.display = 'none';
+    document.removeEventListener('keydown', onAboutKeydown);
+
+    if (lastFocusedElement && lastFocusedElement.focus) {
+      lastFocusedElement.focus();
+    }
   };
+
+  if (aboutDialog) {
+    aboutDialog.addEventListener('click', (evt) => {
+      if (evt.target === aboutDialog) {
+        closeAboutDialog();
+      }
+    });
+  }
 
   if (globalAbout) {
     globalAbout.addEventListener('click', openAbout);

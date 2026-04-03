@@ -35,13 +35,14 @@
 
         <section id="tree" class="tree"></section>
 
-        <dialog id="about-dialog" class="about-dialog" aria-label="About Checklist">
-          <h2>About Checklist PWA</h2>
-          <p>This checklist app stores all data locally.</p>
-          <br>The current version info is pulled from the branch used by GitHub Pages.</br>
-          <div id="about-commit-info">Loading commit info...</div>
-          <button id="close-about">Close</button>
-        </dialog>
+        <div id="about-dialog" class="about-dialog" role="dialog" aria-modal="true" aria-labelledby="about-title" aria-describedby="about-desc" style="display:none;">
+          <div class="about-content">
+            <h2 id="about-title">About Checklist PWA</h2>
+            <p id="about-desc">This checklist app stores all data locally. The current version info is pulled from the branch used by GitHub Pages.</p>
+            <div id="about-commit-info">Loading commit info...</div>
+            <button id="close-about">Close</button>
+          </div>
+        </div>
       </main>
       <!--
       <footer>
