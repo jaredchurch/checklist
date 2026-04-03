@@ -366,7 +366,7 @@ function getCurrentNodes() {
 }
 
 function render() {
-  const container = document.getElementById('tree');
+  const container = document.getElementById('tree-content');
   if (!container) return;
 
   const breadcrumb = document.getElementById('breadcrumb');
