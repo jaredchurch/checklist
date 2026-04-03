@@ -204,9 +204,10 @@ function renderTree(nodes, container, level = 0) {
         render();
       });
     } else {
-      actionControl.textContent = 'Drill In';
+      actionControl.textContent = '↓';
       actionControl.className = 'small-button';
       actionControl.style.marginRight = '0.5rem';
+      actionControl.title = 'Drill In';
       actionControl.addEventListener('click', () => {
         currentPath.push(node.id);
         render();
