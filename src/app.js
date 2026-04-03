@@ -381,7 +381,7 @@ function renderTree(nodes, container, level = 0) {
                 newInput.select();
                 setTimeout(() => newInput.focus(), 10);
               }
-            }, 10);
+            }, 100);
           }
         } else if (node.type === 'list') {
           // Drill into list and create new item
@@ -401,7 +401,7 @@ function renderTree(nodes, container, level = 0) {
                 lastInput.select();
                 setTimeout(() => lastInput.focus(), 10);
               }
-            }, 10);
+            }, 100);
           } else {
             render();
           }
@@ -600,7 +600,7 @@ function registerControls() {
           lastInput.select();
           setTimeout(() => lastInput.focus(), 10);
         }
-      }, 10);
+      }, 100);
     });
   }
 
@@ -621,7 +621,7 @@ function registerControls() {
           lastInput.select();
           setTimeout(() => lastInput.focus(), 10);
         }
-      }, 10);
+      }, 100);
     });
   }
 
