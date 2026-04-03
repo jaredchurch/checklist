@@ -63,6 +63,11 @@ function saveData(data) {
 
 let importFileInput = null;
 
+function updateMenuLock() {
+  const anyOpen = document.querySelector('.context-menu.open');
+  document.body.classList.toggle('menu-open', !!anyOpen);
+}
+
 function exportData() {
   const dataString = JSON.stringify(nodesRaw, null, 2);
   const blob = new Blob([dataString], { type: 'application/json' });
@@ -258,7 +263,7 @@ function renderTree(nodes, container, level = 0) {
     if (node.type === 'list') {
       const contextToggle = document.createElement('button');
       contextToggle.textContent = '⋮';
-      contextToggle.className = 'small-button';
+      contextToggle.className = 'small-button context-toggle';
 
       contextMenu = document.createElement('div');
       contextMenu.className = 'context-menu';
@@ -266,6 +271,7 @@ function renderTree(nodes, container, level = 0) {
       closeMenu = () => contextMenu.classList.remove('open');
       contextToggle.addEventListener('click', () => {
         contextMenu.classList.toggle('open');
+        updateMenuLock();
       });
 
       elements.push(contextToggle);
@@ -449,7 +455,7 @@ function registerControls() {
 
   if (globalMarkAllDone) {
     globalMarkAllDone.addEventListener('click', () => {
-      setTreeDone(nodesRaw.children, true, true);
+      setTreeDone(getCurrentNodes(), true, true);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -458,7 +464,7 @@ function registerControls() {
 
   if (globalMarkAllNotDone) {
     globalMarkAllNotDone.addEventListener('click', () => {
-      setTreeDone(nodesRaw.children, false, true);
+      setTreeDone(getCurrentNodes(), false, true);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -482,12 +488,7 @@ function registerControls() {
   if (globalContextToggle && globalContext) {
     globalContextToggle.addEventListener('click', () => {
       globalContext.classList.toggle('open');
-    });
-
-    document.addEventListener('click', (evt) => {
-      if (!globalContext.contains(evt.target) && evt.target !== globalContextToggle) {
-        globalContext.classList.remove('open');
-      }
+      updateMenuLock();
     });
   }
 
@@ -578,6 +579,18 @@ function registerControls() {
   if (closeAbout) {
     closeAbout.addEventListener('click', closeAboutDialog);
   }
+
+  // Unified click outside to close all context menus
+  document.addEventListener('click', (evt) => {
+    const target = evt.target;
+    const isInsideMenu = target.closest('.context-menu');
+    const isToggle = target.closest('.context-toggle');
+    if (!isInsideMenu && !isToggle) {
+      // close all open context menus
+      document.querySelectorAll('.context-menu.open').forEach(menu => menu.classList.remove('open'));
+      updateMenuLock();
+    }
+  });
 
 }
 

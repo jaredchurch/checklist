@@ -163,3 +163,12 @@ input[type="file"]:hover {
   padding: 0.2rem 0.4rem;
   min-width: 3rem;
 }
+
+body.menu-open * {
+  pointer-events: none;
+}
+
+body.menu-open .context-menu,
+body.menu-open .context-toggle {
+  pointer-events: auto;
+}
