@@ -25,7 +25,28 @@ function createListNode(title = 'New list') {
   };
 }
 
-function sanitizeTree(node) {
+function collectIds(node, ids = new Set()) {
+  if (node && typeof node.id === 'string') {
+    ids.add(node.id);
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      collectIds(child, ids);
+    }
+  }
+  return ids;
+}
+
+function sanitizeTree(node, existingIds = new Set()) {
+  if (!node || typeof node !== 'object') {
+    return createListNode('Root');
+  }
+
+  if (typeof node.id !== 'string' || existingIds.has(node.id)) {
+    node.id = uid();
+  }
+  existingIds.add(node.id);
+
   if (node.type === 'item') {
     node.children = [];
     if (typeof node.done !== 'boolean') node.done = false;
@@ -34,7 +55,9 @@ function sanitizeTree(node) {
   }
 
   if (node.type === 'list') {
-    node.children = Array.isArray(node.children) ? node.children.map(sanitizeTree) : [];
+    node.children = Array.isArray(node.children)
+      ? node.children.map((child) => sanitizeTree(child, existingIds))
+      : [];
     if (typeof node.isNew !== 'boolean') node.isNew = false;
     return node;
   }
@@ -143,7 +166,8 @@ function promptImportSubListData() {
       
       const currentNode = getCurrentParentNode();
       currentNode.children = currentNode.children || [];
-      currentNode.children.push(sanitizeTree(imported));
+      const existingIds = collectIds(nodesRaw);
+      currentNode.children.push(sanitizeTree(imported, existingIds));
       saveData(nodesRaw);
       render();
       fallback.value = '';
@@ -695,7 +719,8 @@ function registerControls() {
       if (importFileData) {
         const currentNode = getCurrentParentNode();
         currentNode.children = currentNode.children || [];
-        currentNode.children.push(sanitizeTree(importFileData));
+        const existingIds = collectIds(nodesRaw);
+        currentNode.children.push(sanitizeTree(importFileData, existingIds));
         saveData(nodesRaw);
         render();
         closeImportDialog();
@@ -792,6 +817,7 @@ export {
   setLevelDone,
   findNodeById,
   findParent,
+  sanitizeTree,
   render,
   renderTree
 };
