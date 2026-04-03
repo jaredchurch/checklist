@@ -10,7 +10,8 @@ function createNode(title = 'New item') {
     type: 'item',
     title,
     done: false,
-    children: []
+    children: [],
+    isNew: true
   };
 }
 
@@ -19,7 +20,8 @@ function createListNode(title = 'New list') {
     id: uid(),
     type: 'list',
     title,
-    children: []
+    children: [],
+    isNew: true
   };
 }
 
@@ -27,11 +29,13 @@ function sanitizeTree(node) {
   if (node.type === 'item') {
     node.children = [];
     if (typeof node.done !== 'boolean') node.done = false;
+    if (typeof node.isNew !== 'boolean') node.isNew = false;
     return node;
   }
 
   if (node.type === 'list') {
     node.children = Array.isArray(node.children) ? node.children.map(sanitizeTree) : [];
+    if (typeof node.isNew !== 'boolean') node.isNew = false;
     return node;
   }
 
@@ -228,8 +232,72 @@ function renderTree(nodes, container, level = 0) {
     titleInput.className = 'label';
     titleInput.addEventListener('change', () => {
       node.title = titleInput.value;
+      node.isNew = false;
       saveData(nodesRaw);
       render();
+    });
+    titleInput.addEventListener('blur', () => {
+      node.isNew = false;
+    });
+    titleInput.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Enter') {
+        evt.preventDefault();
+        node.isNew = false;
+        if (node.type === 'item') {
+          // Create new item
+          const parent = findParent(nodesRaw, node.id);
+          const array = parent ? parent.children : nodesRaw.children;
+          const idx = array.findIndex((c) => c.id === node.id);
+          if (idx !== -1) {
+            array.splice(idx + 1, 0, createNode());
+            saveData(nodesRaw);
+            render();
+            // Focus the new item
+            setTimeout(() => {
+              const inputs = document.querySelectorAll('#tree-content input.label');
+              const newInput = inputs[idx + 1];
+              if (newInput) {
+                newInput.focus();
+                newInput.select();
+              }
+            }, 0);
+          }
+        } else if (node.type === 'list') {
+          // Drill into list and create new item
+          currentPath.push(node.id);
+          const listNode = findNodeById(nodesRaw, node.id);
+          if (listNode) {
+            listNode.children = listNode.children || [];
+            listNode.children.push(createNode());
+            saveData(nodesRaw);
+            render();
+            // Focus the new item in the sub-list
+            setTimeout(() => {
+              const inputs = document.querySelectorAll('#tree-content input.label');
+              const lastInput = inputs[inputs.length - 1];
+              if (lastInput) {
+                lastInput.focus();
+                lastInput.select();
+              }
+            }, 0);
+          } else {
+            render();
+          }
+        }
+      } else if (evt.key === 'Escape') {
+        if (node.isNew) {
+          evt.preventDefault();
+          // Delete the new item
+          const parent = findParent(nodesRaw, node.id);
+          const array = parent ? parent.children : nodesRaw.children;
+          const idx = array.findIndex((c) => c.id === node.id);
+          if (idx !== -1) {
+            array.splice(idx, 1);
+            saveData(nodesRaw);
+            render();
+          }
+        }
+      }
     });
 
     const removeButton = document.createElement('button');
@@ -350,9 +418,19 @@ function registerControls() {
     addItem.addEventListener('click', () => {
       const parent = getCurrentParentNode();
       parent.children = parent.children || [];
-      parent.children.push(createNode());
+      const newNode = createNode();
+      parent.children.push(newNode);
       saveData(nodesRaw);
       render();
+      // Focus the new item
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#tree-content input.label');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput) {
+          lastInput.focus();
+          lastInput.select();
+        }
+      }, 0);
     });
   }
 
@@ -360,9 +438,19 @@ function registerControls() {
     addList.addEventListener('click', () => {
       const parent = getCurrentParentNode();
       parent.children = parent.children || [];
-      parent.children.push(createListNode());
+      const newNode = createListNode();
+      parent.children.push(newNode);
       saveData(nodesRaw);
       render();
+      // Focus the new list
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#tree-content input.label');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput) {
+          lastInput.focus();
+          lastInput.select();
+        }
+      }, 0);
     });
   }
 

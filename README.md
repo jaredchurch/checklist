@@ -17,7 +17,7 @@ A Progressive Web App checklist application with infinite sub-list tree structur
 ## Run locally
 
 1. `npm install`
-2. `npm run dev`
+2. `npm run dev` (maybe `npm run dev -- --host`)
 3. open `http://localhost:5173`
 
 ## Build
