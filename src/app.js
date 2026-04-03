@@ -61,6 +61,52 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
+let importFileInput = null;
+
+function exportData() {
+  const dataString = JSON.stringify(nodesRaw, null, 2);
+  const blob = new Blob([dataString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'checklist-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function promptImportData() {
+  const input = importFileInput || document.getElementById('import');
+  if (input) {
+    input.click();
+    return;
+  }
+
+  const fallback = document.createElement('input');
+  fallback.type = 'file';
+  fallback.accept = 'application/json';
+  fallback.style.display = 'none';
+  fallback.addEventListener('change', async (evt) => {
+    const file = evt.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
+      nodesRaw = sanitizeTree(imported);
+      saveData(nodesRaw);
+      render();
+      fallback.value = '';
+    } catch (error) {
+      alert('Import failed: ' + error.message);
+      console.error(error);
+    } finally {
+      document.body.removeChild(fallback);
+    }
+  });
+  document.body.appendChild(fallback);
+  fallback.click();
+}
+
 function findNodeById(root, id) {
   if (root.id === id) return root;
   for (const n of root.children) {
@@ -284,10 +330,8 @@ function render() {
 function registerControls() {
   const addItem = document.getElementById('add-item');
   const addList = document.getElementById('add-list');
-  const markAllDone = document.getElementById('mark-all-done');
-  const markAllNotDone = document.getElementById('mark-all-not-done');
-  const exportBtn = document.getElementById('export');
-  const importInput = document.getElementById('import');
+  const globalMarkAllDone = document.getElementById('global-mark-all-done');
+  const globalMarkAllNotDone = document.getElementById('global-mark-all-not-done');
 
   if (addItem) {
     addItem.addEventListener('click', () => {
@@ -305,53 +349,55 @@ function registerControls() {
     });
   }
 
-  if (markAllDone) {
-    markAllDone.addEventListener('click', () => {
+  if (globalMarkAllDone) {
+    globalMarkAllDone.addEventListener('click', () => {
       setTreeDone(nodesRaw.children, true, true);
       saveData(nodesRaw);
       render();
+      document.getElementById('global-context')?.classList.remove('open');
     });
   }
 
-  if (markAllNotDone) {
-    markAllNotDone.addEventListener('click', () => {
+  if (globalMarkAllNotDone) {
+    globalMarkAllNotDone.addEventListener('click', () => {
       setTreeDone(nodesRaw.children, false, true);
       saveData(nodesRaw);
       render();
+      document.getElementById('global-context')?.classList.remove('open');
     });
   }
 
-  if (exportBtn) {
-    exportBtn.addEventListener('click', () => {
-      const dataString = JSON.stringify(nodesRaw, null, 2);
-      const blob = new Blob([dataString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'checklist-backup.json';
-      a.click();
-      URL.revokeObjectURL(url);
+  const globalContextToggle = document.getElementById('global-context-toggle');
+  const globalContext = document.getElementById('global-context');
+  const globalExport = document.getElementById('global-export');
+  const globalImport = document.getElementById('global-import');
+
+  if (globalContextToggle && globalContext) {
+    globalContextToggle.addEventListener('click', () => {
+      globalContext.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (evt) => {
+      if (!globalContext.contains(evt.target) && evt.target !== globalContextToggle) {
+        globalContext.classList.remove('open');
+      }
     });
   }
 
-  if (importInput) {
-    importInput.addEventListener('change', async (evt) => {
-      const file = evt.target.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const imported = JSON.parse(text);
-        if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
-        nodesRaw = sanitizeTree(imported);
-        saveData(nodesRaw);
-        render();
-        importInput.value = '';
-      } catch (error) {
-      alert('Import failed: ' + error.message);
-      console.error(error);
-    }
-  });
+  if (globalExport) {
+    globalExport.addEventListener('click', () => {
+      exportData();
+      globalContext?.classList.remove('open');
+    });
   }
+
+  if (globalImport) {
+    globalImport.addEventListener('click', () => {
+      promptImportData();
+      globalContext?.classList.remove('open');
+    });
+  }
+
 }
 
 async function fetchCommitInfo() {
@@ -360,16 +406,21 @@ async function fetchCommitInfo() {
 
   const repoOwner = 'jaredchurch';
   const repoName = 'checklist';
-  const branch = 'main';
-  const url = `https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`GitHub API ${response.status}`);
-    const commit = await response.json();
+    const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`);
+    if (!repoResp.ok) throw new Error(`Repo info API ${repoResp.status}`);
+    const repoData = await repoResp.json();
+    const branch = repoData.default_branch || 'main';
+
+    const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`);
+    if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`);
+    const commit = await commitResp.json();
+
     const hash = commit.sha.slice(0, 7);
     const date = new Date(commit.commit.committer.date).toLocaleString();
-    el.textContent = `Commit ${hash} @ ${date}`;
+    el.textContent = `Commit ${hash} @ ${date} (${branch})`;
+    return;
   } catch (err) {
     console.warn('Failed to load commit info', err);
     el.textContent = 'Commit info unavailable';

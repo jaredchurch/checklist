@@ -88,12 +88,12 @@ describe('Checklist core logic', () => {
     expect(secondListMenuToggle).toBeDefined();
 
     const firstListItemButtons = [...firstItem.querySelectorAll('button')].map((b) => b.textContent);
-    expect(firstListItemButtons).not.toContain('This+Descendants Done');
-    expect(firstListItemButtons).not.toContain('This+Descendants Not Done');
+    expect(firstListItemButtons).not.toContain('Set Descendants Done');
+    expect(firstListItemButtons).not.toContain('Set Descendants Not Done');
 
     const secondListButtons = [...secondListItem.querySelectorAll('button')].map((b) => b.textContent);
-    expect(secondListButtons).toContain('This+Descendants Done');
-    expect(secondListButtons).toContain('This+Descendants Not Done');
+    expect(secondListButtons).toContain('Set Descendants Done');
+    expect(secondListButtons).toContain('Set Descendants Not Done');
   });
 
   it('getData/saveData roundtrips localStorage', () => {
