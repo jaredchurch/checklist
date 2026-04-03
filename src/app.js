@@ -453,8 +453,6 @@ function registerControls() {
     });
   }
 
-  const backUp = document.getElementById('back-up');
-
   if (globalMarkAllNotDone) {
     globalMarkAllNotDone.addEventListener('click', () => {
       setTreeDone(nodesRaw.children, false, true);
