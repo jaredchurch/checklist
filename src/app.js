@@ -208,7 +208,7 @@ function renderTree(nodes, container, level = 0) {
     } else {
       actionControl.textContent = '↓';
       actionControl.className = 'small-button';
-      actionControl.style.minWidth = '3rem';
+      actionControl.style.minWidth = '1rem';
       actionControl.style.marginRight = '0.5rem';
       actionControl.title = 'Drill In';
       actionControl.addEventListener('click', () => {
