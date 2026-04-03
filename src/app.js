@@ -191,22 +191,29 @@ function renderTree(nodes, container, level = 0) {
     const wrapper = document.createElement('div');
     wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
 
-    const checkbox = document.createElement('input');
+    const titleInput = document.createElement('input');
+
+    const actionControl = document.createElement(node.type === 'item' ? 'input' : 'button');
+
     if (node.type === 'item') {
-      checkbox.type = 'checkbox';
-      checkbox.checked = node.done;
-      checkbox.addEventListener('change', () => {
-        node.done = checkbox.checked;
+      actionControl.type = 'checkbox';
+      actionControl.checked = node.done;
+      actionControl.addEventListener('change', () => {
+        node.done = actionControl.checked;
         saveData(nodesRaw);
         render();
       });
     } else {
-      checkbox.type = 'checkbox';
-      checkbox.disabled = true;
-      checkbox.title = 'Sub-list has no done state';
+      actionControl.textContent = 'Drill In';
+      actionControl.className = 'small-button';
+      actionControl.style.marginRight = '0.5rem';
+      actionControl.addEventListener('click', () => {
+        currentPath.push(node.id);
+        render();
+      });
     }
 
-    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
     titleInput.type = 'text';
     titleInput.value = node.title;
     titleInput.className = 'label';
@@ -230,7 +237,7 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const elements = [checkbox, titleInput, removeButton];
+    const elements = [actionControl, titleInput, removeButton];
 
     let contextMenu = null;
     let closeMenu = null;
@@ -326,16 +333,6 @@ function renderTree(nodes, container, level = 0) {
       summaryEl.style.marginLeft = '0.5rem';
       wrapper.appendChild(summaryEl);
 
-      const drillButton = document.createElement('button');
-      drillButton.textContent = 'Drill In';
-      drillButton.className = 'small-button';
-      drillButton.addEventListener('click', () => {
-        if (node.type === 'list') {
-          currentPath.push(node.id);
-          render();
-        }
-      });
-      wrapper.appendChild(drillButton);
     }
 
     li.appendChild(wrapper);
