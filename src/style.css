@@ -27,6 +27,16 @@ header {
   align-items: center;
 }
 
+.controls .back-up {
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.controls .back-up.hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
 .global-context-menu {
   position: relative;
   margin-left: auto;

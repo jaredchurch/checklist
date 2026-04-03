@@ -407,11 +407,18 @@ function render() {
   renderTree(getCurrentNodes(), container);
   const back = document.getElementById('back-up');
   if (back) {
-    back.style.display = currentPath.length > 0 ? 'inline-block' : 'none';
+    if (currentPath.length > 0) {
+      back.classList.remove('hidden');
+      back.style.visibility = 'visible';
+    } else {
+      back.classList.add('hidden');
+      back.style.visibility = 'hidden';
+    }
   }
 }
 
 function registerControls() {
+  const backUp = document.getElementById('back-up');
   const addItem = document.getElementById('add-item');
   const addList = document.getElementById('add-list');
   const globalMarkAllDone = document.getElementById('global-mark-all-done');
