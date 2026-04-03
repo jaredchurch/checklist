@@ -22,6 +22,16 @@ header {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
+  position: relative;
+}
+
+.global-context-menu {
+  position: relative;
+}
+
+.global-context-menu .context-menu {
+  top: 2.5rem;
+  right: 0;
 }
 button,
 input[type="file"] {

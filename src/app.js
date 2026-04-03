@@ -268,18 +268,6 @@ function renderTree(nodes, container, level = 0) {
         render();
       });
 
-      const exportJson = document.createElement('button');
-      exportJson.textContent = 'Export JSON';
-      exportJson.addEventListener('click', () => {
-        exportData();
-      });
-
-      const importJson = document.createElement('button');
-      importJson.textContent = 'Import JSON';
-      importJson.addEventListener('click', () => {
-        promptImportData();
-      });
-
       const thisLevelDone = document.createElement('button');
       thisLevelDone.textContent = 'Level Done';
       thisLevelDone.addEventListener('click', () => {
@@ -300,8 +288,6 @@ function renderTree(nodes, container, level = 0) {
       addMenuAction(addChildList);
       addMenuAction(childDoneAll);
       addMenuAction(childNotDoneAll);
-      addMenuAction(exportJson);
-      addMenuAction(importJson);
       if (level > 0) {
         addMenuAction(thisLevelDone);
         addMenuAction(thisLevelNotDone);
@@ -346,8 +332,6 @@ function registerControls() {
   const addList = document.getElementById('add-list');
   const markAllDone = document.getElementById('mark-all-done');
   const markAllNotDone = document.getElementById('mark-all-not-done');
-  const exportBtn = document.getElementById('export');
-  const importInput = document.getElementById('import');
 
   if (addItem) {
     addItem.addEventListener('click', () => {
@@ -381,38 +365,37 @@ function registerControls() {
     });
   }
 
-  if (exportBtn) {
-    exportBtn.addEventListener('click', () => {
-      const dataString = JSON.stringify(nodesRaw, null, 2);
-      const blob = new Blob([dataString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'checklist-backup.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-  }
+  const globalContextToggle = document.getElementById('global-context-toggle');
+  const globalContext = document.getElementById('global-context');
+  const globalExport = document.getElementById('global-export');
+  const globalImport = document.getElementById('global-import');
 
-  if (importInput) {
-    importFileInput = importInput;
-    importInput.addEventListener('change', async (evt) => {
-      const file = evt.target.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const imported = JSON.parse(text);
-        if (imported.type !== 'list') throw new Error('Invalid file format: must be a list node');
-        nodesRaw = sanitizeTree(imported);
-        saveData(nodesRaw);
-        render();
-        importInput.value = '';
-      } catch (error) {
-        alert('Import failed: ' + error.message);
-        console.error(error);
+  if (globalContextToggle && globalContext) {
+    globalContextToggle.addEventListener('click', () => {
+      globalContext.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (evt) => {
+      if (!globalContext.contains(evt.target) && evt.target !== globalContextToggle) {
+        globalContext.classList.remove('open');
       }
     });
   }
+
+  if (globalExport) {
+    globalExport.addEventListener('click', () => {
+      exportData();
+      globalContext?.classList.remove('open');
+    });
+  }
+
+  if (globalImport) {
+    globalImport.addEventListener('click', () => {
+      promptImportData();
+      globalContext?.classList.remove('open');
+    });
+  }
+
 }
 
 async function fetchCommitInfo() {
