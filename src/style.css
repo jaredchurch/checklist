@@ -132,6 +132,13 @@ input[type="file"]:hover {
   width: 100%;
   text-align: left;
 }
+.context-menu button.destructive {
+  color: #dc2626;
+}
+.context-menu button.destructive:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
 .about-dialog {
   position: fixed;
   top: 0;
