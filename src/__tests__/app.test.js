@@ -136,7 +136,7 @@ describe('Checklist core logic', () => {
     expect(root.children.map((n) => n.title)).toEqual(['Item A', 'Item C', 'Item B']);
   });
 
-  it('renderTree does not add descendant action buttons on item nodes', () => {
+  it('renderTree adds context menu toggle to both items and lists', () => {
     const root = createListNode('Root');
     const item = createNode('Item');
     item.children.push(createNode('child-of-item'));
@@ -147,12 +147,12 @@ describe('Checklist core logic', () => {
     renderTree(root.children, container);
 
     const firstItem = container.querySelectorAll('li')[0];
-    const firstItemMenuToggle = firstItem.querySelector('button');
-    expect(firstItemMenuToggle?.textContent).not.toBe('⋮');
+    const firstItemMenuToggle = [...firstItem.querySelectorAll('button')].find((b) => b.textContent === '⋮');
+    expect(firstItemMenuToggle).toBeDefined();
 
     const secondListItem = container.querySelectorAll('li')[1];
     const secondListMenuToggle = [...secondListItem.querySelectorAll('button')].find((b) => b.textContent === '⋮');
-    expect(secondListMenuToggle).toBeUndefined();
+    expect(secondListMenuToggle).toBeDefined();
 
     const firstListItemButtons = [...firstItem.querySelectorAll('button')].map((b) => b.textContent);
     expect(firstListItemButtons).not.toContain('Set Descendants Done');

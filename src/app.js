@@ -1,5 +1,7 @@
 const KEY = 'checklist-pwa-data-v1';
+const SETTINGS_KEY = 'checklist-pwa-settings-v1';
 let nextOrder = 1;
+let showUpDownActions = false;
 
 function uid() {
   return "x" + Math.random().toString(16).slice(2) + Date.now().toString(16);
@@ -99,6 +101,25 @@ function getData() {
 
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+function getSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { showUpDownActions: false };
+    const parsed = JSON.parse(raw);
+    return {
+      showUpDownActions: typeof parsed.showUpDownActions === 'boolean' ? parsed.showUpDownActions : false
+    };
+  } catch (err) {
+    console.error('Invalid saved settings', err);
+    localStorage.removeItem(SETTINGS_KEY);
+    return { showUpDownActions: false };
+  }
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
 let importFileInput = null;
@@ -316,6 +337,20 @@ function renderTree(nodes, container, level = 0) {
     const li = document.createElement('li');
     const wrapper = document.createElement('div');
     wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
+    wrapper.setAttribute('data-node-id', node.id);
+
+    // Add right-click context menu support
+    wrapper.addEventListener('contextmenu', (evt) => {
+      evt.preventDefault();
+      // Close any other open context menus
+      document.querySelectorAll('.item-context-menu.open').forEach(menu => menu.classList.remove('open'));
+      // Open this item's context menu
+      const menu = wrapper.querySelector('.item-context-menu');
+      if (menu) {
+        menu.classList.add('open');
+        updateMenuLock();
+      }
+    });
 
     const titleInput = document.createElement('input');
 
@@ -454,10 +489,32 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const removeButton = document.createElement('button');
-    removeButton.textContent = 'Delete';
-    removeButton.className = 'small-button';
-    removeButton.addEventListener('click', () => {
+    // Context menu toggle button
+    const contextToggle = document.createElement('button');
+    contextToggle.textContent = '⋮';
+    contextToggle.className = 'small-button context-toggle';
+    contextToggle.style.minWidth = '1rem';
+    contextToggle.title = 'More options';
+    contextToggle.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      // Close any other open context menus
+      document.querySelectorAll('.item-context-menu.open').forEach(menu => menu.classList.remove('open'));
+      // Open this item's context menu
+      const menu = wrapper.querySelector('.item-context-menu');
+      if (menu) {
+        menu.classList.add('open');
+        updateMenuLock();
+      }
+    });
+
+    // Context menu
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'item-context-menu context-menu';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.className = 'destructive';
+    deleteButton.addEventListener('click', () => {
       const parent = findParent(nodesRaw, node.id);
       const array = parent ? parent.children : nodesRaw.children;
       const idx = array.findIndex((c) => c.id === node.id);
@@ -466,22 +523,33 @@ function renderTree(nodes, container, level = 0) {
         saveData(nodesRaw);
         render();
       }
+      contextMenu.classList.remove('open');
+      updateMenuLock();
     });
+
+    contextMenu.appendChild(deleteButton);
 
     upButton.disabled = index === 0;
     downButton.disabled = index === nodes.length - 1;
 
-    const elements = [actionControl, titleInput, upButton, downButton, removeButton];
+    const elements = [actionControl, titleInput];
+    
+    if (showUpDownActions) {
+      elements.push(upButton, downButton);
+    }
+    
+    elements.push(contextToggle);
 
     if (node.type === 'list') {
       const summary = getDescendantItemSummary(node);
       const summaryEl = document.createElement('span');
       summaryEl.className = 'summary';
       summaryEl.textContent = `(${summary.done}/${summary.total})`;
-      elements.splice(2, 0, summaryEl); // insert before upButton
+      elements.splice(2, 0, summaryEl); // insert before upButton or contextToggle
     }
 
     wrapper.append(...elements);
+    wrapper.appendChild(contextMenu);
 
     li.appendChild(wrapper);
     ul.appendChild(li);
@@ -500,6 +568,10 @@ function findParent(root, childId, parent = null) {
 
 let nodesRaw = getData();
 let currentPath = [];
+
+// Load settings
+const settings = getSettings();
+showUpDownActions = settings.showUpDownActions;
 
 function getCurrentParentNode() {
   if (currentPath.length === 0) return nodesRaw;
@@ -561,6 +633,12 @@ function render() {
       back.classList.add('hidden');
       back.style.visibility = 'hidden';
     }
+  }
+
+  // Update toggle button text
+  const toggleButton = document.getElementById('global-toggle-up-down');
+  if (toggleButton) {
+    toggleButton.textContent = showUpDownActions ? 'Hide Sorting' : 'Show Sorting';
   }
 }
 
@@ -624,6 +702,16 @@ function registerControls() {
       const currentNode = getCurrentParentNode();
       sortNodeChildren(currentNode);
       saveData(nodesRaw);
+      render();
+      document.getElementById('global-context')?.classList.remove('open');
+    });
+  }
+
+  const globalToggleUpDown = document.getElementById('global-toggle-up-down');
+  if (globalToggleUpDown) {
+    globalToggleUpDown.addEventListener('click', () => {
+      showUpDownActions = !showUpDownActions;
+      saveSettings({ showUpDownActions });
       render();
       document.getElementById('global-context')?.classList.remove('open');
     });
