@@ -104,4 +104,21 @@ describe('Checklist core logic', () => {
     expect(loaded.title).toBe('Test Root');
     expect(loaded.children[0].title).toBe('x');
   });
+
+  it('lastCompletedDate is set when item is marked as done', () => {
+    const item = createNode('Test');
+    expect(item.lastCompletedDate).toBeUndefined();
+    item.done = true;
+    item.lastCompletedDate = Date.now();
+    expect(item.lastCompletedDate).toBeDefined();
+    expect(item.lastCompletedDate).toBeGreaterThan(0);
+  });
+
+  it('lastCompletedDate persists when item is unmarked', () => {
+    const item = createNode('Test');
+    item.done = true;
+    item.lastCompletedDate = 1000;
+    item.done = false;
+    expect(item.lastCompletedDate).toBe(1000);
+  });
 });
