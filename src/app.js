@@ -1,7 +1,14 @@
 const KEY = 'checklist-pwa-data-v1';
+const SETTINGS_KEY = 'checklist-pwa-settings-v1';
+let nextOrder = 1;
+let showUpDownActions = false;
 
 function uid() {
   return "x" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+function getNextOrder() {
+  return nextOrder++;
 }
 
 function createNode(title = 'New item') {
@@ -11,6 +18,7 @@ function createNode(title = 'New item') {
     title,
     done: false,
     children: [],
+    order: getNextOrder(),
     isNew: true
   };
 }
@@ -21,11 +29,39 @@ function createListNode(title = 'New list') {
     type: 'list',
     title,
     children: [],
+    order: getNextOrder(),
     isNew: true
   };
 }
 
-function sanitizeTree(node) {
+function collectIds(node, ids = new Set()) {
+  if (node && typeof node.id === 'string') {
+    ids.add(node.id);
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      collectIds(child, ids);
+    }
+  }
+  return ids;
+}
+
+function sanitizeTree(node, existingIds = new Set()) {
+  if (!node || typeof node !== 'object') {
+    return createListNode('Root');
+  }
+
+  if (typeof node.id !== 'string' || existingIds.has(node.id)) {
+    node.id = uid();
+  }
+  existingIds.add(node.id);
+
+  if (typeof node.order !== 'number' || !Number.isFinite(node.order)) {
+    node.order = getNextOrder();
+  } else {
+    nextOrder = Math.max(nextOrder, node.order + 1);
+  }
+
   if (node.type === 'item') {
     node.children = [];
     if (typeof node.done !== 'boolean') node.done = false;
@@ -34,7 +70,9 @@ function sanitizeTree(node) {
   }
 
   if (node.type === 'list') {
-    node.children = Array.isArray(node.children) ? node.children.map(sanitizeTree) : [];
+    node.children = Array.isArray(node.children)
+      ? node.children.map((child) => sanitizeTree(child, existingIds))
+      : [];
     if (typeof node.isNew !== 'boolean') node.isNew = false;
     return node;
   }
@@ -63,6 +101,25 @@ function getData() {
 
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+function getSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { showUpDownActions: false };
+    const parsed = JSON.parse(raw);
+    return {
+      showUpDownActions: typeof parsed.showUpDownActions === 'boolean' ? parsed.showUpDownActions : false
+    };
+  } catch (err) {
+    console.error('Invalid saved settings', err);
+    localStorage.removeItem(SETTINGS_KEY);
+    return { showUpDownActions: false };
+  }
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
 let importFileInput = null;
@@ -143,7 +200,8 @@ function promptImportSubListData() {
       
       const currentNode = getCurrentParentNode();
       currentNode.children = currentNode.children || [];
-      currentNode.children.push(sanitizeTree(imported));
+      const existingIds = collectIds(nodesRaw);
+      currentNode.children.push(sanitizeTree(imported, existingIds));
       saveData(nodesRaw);
       render();
       fallback.value = '';
@@ -214,6 +272,44 @@ function getDescendantItemSummary(node) {
   return { done, total };
 }
 
+function isNodeComplete(node) {
+  if (node.type === 'item') {
+    return node.done === true;
+  }
+
+  if (node.type === 'list') {
+    const summary = getDescendantItemSummary(node);
+    return summary.total > 0 && summary.done === summary.total;
+  }
+
+  return false;
+}
+
+function sortNodeChildren(node) {
+  if (!node || node.type !== 'list' || !Array.isArray(node.children)) return;
+
+  node.children = node.children
+    .map((child, index) => ({ child, index }))
+    .sort((a, b) => {
+      const completeA = isNodeComplete(a.child) ? 1 : 0;
+      const completeB = isNodeComplete(b.child) ? 1 : 0;
+      if (completeA !== completeB) return completeA - completeB;
+
+      const typeA = a.child.type === 'list' ? 0 : 1;
+      const typeB = b.child.type === 'list' ? 0 : 1;
+      if (typeA !== typeB) return typeA - typeB;
+
+      return (a.child.order ?? a.index) - (b.child.order ?? b.index);
+    })
+    .map((entry) => entry.child);
+
+  for (const child of node.children) {
+    if (child.type === 'list') {
+      sortNodeChildren(child);
+    }
+  }
+}
+
 function setLevelDone(nodes, level, done) {
   if (level === 0) {
     for (const n of nodes) {
@@ -233,7 +329,7 @@ function setLevelDone(nodes, level, done) {
 function renderTree(nodes, container, level = 0) {
   container.innerHTML = '';
   const ul = document.createElement('ul');
-  for (const node of nodes) {
+  nodes.forEach((node, index) => {
     if (node.type === 'item') {
       node.children = []; // Enforce no descendants on item nodes
     }
@@ -242,6 +338,21 @@ function renderTree(nodes, container, level = 0) {
     const wrapper = document.createElement('div');
     const isListDone = node.type === 'list' && getDescendantItemSummary(node).total > 0 && getDescendantItemSummary(node).done === getDescendantItemSummary(node).total;
     wrapper.className = `tree-item${(node.type === 'item' && node.done) || isListDone ? ' done' : ''}`;
+    // wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
+    wrapper.setAttribute('data-node-id', node.id);
+
+    // Add right-click context menu support
+    wrapper.addEventListener('contextmenu', (evt) => {
+      evt.preventDefault();
+      // Close any other open context menus
+      document.querySelectorAll('.item-context-menu.open').forEach(menu => menu.classList.remove('open'));
+      // Open this item's context menu
+      const menu = wrapper.querySelector('.item-context-menu');
+      if (menu) {
+        menu.classList.add('open');
+        updateMenuLock();
+      }
+    });
 
     const titleInput = document.createElement('input');
 
@@ -256,6 +367,8 @@ function renderTree(nodes, container, level = 0) {
         if (node.done && !wasDone) {
           node.lastCompletedDate = Date.now();
         }
+        const currentNode = getCurrentParentNode();
+        sortNodeChildren(currentNode);
         saveData(nodesRaw);
         render();
       });
@@ -289,6 +402,7 @@ function renderTree(nodes, container, level = 0) {
     titleInput.addEventListener('keydown', (evt) => {
       if (evt.key === 'Enter') {
         evt.preventDefault();
+        node.title = titleInput.value;
         node.isNew = false;
         if (node.type === 'item') {
           // Create new item
@@ -299,15 +413,10 @@ function renderTree(nodes, container, level = 0) {
             array.splice(idx + 1, 0, createNode());
             saveData(nodesRaw);
             render();
-            // Focus the new item
-            setTimeout(() => {
-              const inputs = document.querySelectorAll('#tree-content input.label');
-              const newInput = inputs[idx + 1];
-              if (newInput) {
-                newInput.focus();
-                newInput.select();
-              }
-            }, 0);
+            // Focus the new item immediately so iOS can show the keyboard.
+            const inputs = document.querySelectorAll('#tree-content input.label');
+            const newInput = inputs[idx + 1];
+            focusLabelInput(newInput);
           }
         } else if (node.type === 'list') {
           // Drill into list and create new item
@@ -318,15 +427,10 @@ function renderTree(nodes, container, level = 0) {
             listNode.children.push(createNode());
             saveData(nodesRaw);
             render();
-            // Focus the new item in the sub-list
-            setTimeout(() => {
-              const inputs = document.querySelectorAll('#tree-content input.label');
-              const lastInput = inputs[inputs.length - 1];
-              if (lastInput) {
-                lastInput.focus();
-                lastInput.select();
-              }
-            }, 0);
+            // Focus the new item in the sub-list immediately so iOS can show the keyboard.
+            const inputs = document.querySelectorAll('#tree-content input.label');
+            const lastInput = inputs[inputs.length - 1];
+            focusLabelInput(lastInput);
           } else {
             render();
           }
@@ -347,10 +451,76 @@ function renderTree(nodes, container, level = 0) {
       }
     });
 
-    const removeButton = document.createElement('button');
-    removeButton.textContent = 'Delete';
-    removeButton.className = 'small-button';
-    removeButton.addEventListener('click', () => {
+    const upButton = document.createElement('button');
+    upButton.textContent = '↑';
+    upButton.className = 'small-button';
+    upButton.style.minWidth = '1rem';
+    upButton.style.marginRight = '0.5rem';
+    upButton.title = 'Move Up';
+    upButton.addEventListener('click', () => {
+      const parent = findParent(nodesRaw, node.id);
+      const array = parent ? parent.children : nodesRaw.children;
+      const idx = array.findIndex((c) => c.id === node.id);
+      if (idx > 0) {
+        // Swap orders
+        const tempOrder = array[idx].order;
+        array[idx].order = array[idx - 1].order;
+        array[idx - 1].order = tempOrder;
+        // Re-sort the parent
+        sortNodeChildren(parent || nodesRaw);
+        saveData(nodesRaw);
+        render();
+      }
+    });
+
+    const downButton = document.createElement('button');
+    downButton.textContent = '↓';
+    downButton.className = 'small-button';
+    downButton.style.minWidth = '1rem';
+    downButton.style.marginRight = '0.5rem';
+    downButton.title = 'Move Down';
+    downButton.addEventListener('click', () => {
+      const parent = findParent(nodesRaw, node.id);
+      const array = parent ? parent.children : nodesRaw.children;
+      const idx = array.findIndex((c) => c.id === node.id);
+      if (idx < array.length - 1) {
+        // Swap orders
+        const tempOrder = array[idx].order;
+        array[idx].order = array[idx + 1].order;
+        array[idx + 1].order = tempOrder;
+        // Re-sort the parent
+        sortNodeChildren(parent || nodesRaw);
+        saveData(nodesRaw);
+        render();
+      }
+    });
+
+    // Context menu toggle button
+    const contextToggle = document.createElement('button');
+    contextToggle.textContent = '⋮';
+    contextToggle.className = 'small-button context-toggle';
+    contextToggle.style.minWidth = '1rem';
+    contextToggle.title = 'More options';
+    contextToggle.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      // Close any other open context menus
+      document.querySelectorAll('.item-context-menu.open').forEach(menu => menu.classList.remove('open'));
+      // Open this item's context menu
+      const menu = wrapper.querySelector('.item-context-menu');
+      if (menu) {
+        menu.classList.add('open');
+        updateMenuLock();
+      }
+    });
+
+    // Context menu
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'item-context-menu context-menu';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.className = 'destructive';
+    deleteButton.addEventListener('click', () => {
       const parent = findParent(nodesRaw, node.id);
       const array = parent ? parent.children : nodesRaw.children;
       const idx = array.findIndex((c) => c.id === node.id);
@@ -359,23 +529,37 @@ function renderTree(nodes, container, level = 0) {
         saveData(nodesRaw);
         render();
       }
+      contextMenu.classList.remove('open');
+      updateMenuLock();
     });
 
-    const elements = [actionControl, titleInput, removeButton];
+    contextMenu.appendChild(deleteButton);
+
+    upButton.disabled = index === 0;
+    downButton.disabled = index === nodes.length - 1;
+
+    const elements = [actionControl, titleInput];
+    
+    if (showUpDownActions) {
+      elements.push(upButton, downButton);
+    }
+    
+    elements.push(contextToggle);
 
     if (node.type === 'list') {
       const summary = getDescendantItemSummary(node);
       const summaryEl = document.createElement('span');
       summaryEl.className = 'summary';
       summaryEl.textContent = `(${summary.done}/${summary.total})`;
-      elements.splice(2, 0, summaryEl); // insert before removeButton
+      elements.splice(2, 0, summaryEl); // insert before upButton or contextToggle
     }
 
     wrapper.append(...elements);
+    wrapper.appendChild(contextMenu);
 
     li.appendChild(wrapper);
     ul.appendChild(li);
-  }
+  });
   container.appendChild(ul);
 }
 
@@ -390,6 +574,10 @@ function findParent(root, childId, parent = null) {
 
 let nodesRaw = getData();
 let currentPath = [];
+
+// Load settings
+const settings = getSettings();
+showUpDownActions = settings.showUpDownActions;
 
 function getCurrentParentNode() {
   if (currentPath.length === 0) return nodesRaw;
@@ -514,6 +702,18 @@ function render() {
   if (sortBtn) {
     sortBtn.textContent = parent.sortMode === 'completed' ? 'Sort: Manual' : 'Sort: Last Completed';
   }
+  
+  // Update toggle button text
+  const toggleButton = document.getElementById('global-toggle-up-down');
+  if (toggleButton) {
+    toggleButton.textContent = showUpDownActions ? 'Hide Sorting' : 'Show Sorting';
+  }
+}
+
+function focusLabelInput(input) {
+  if (!input) return;
+  input.focus();
+  input.select();
 }
 
 function registerControls() {
@@ -531,15 +731,10 @@ function registerControls() {
       parent.children.push(newNode);
       saveData(nodesRaw);
       render();
-      // Focus the new item
-      setTimeout(() => {
-        const inputs = document.querySelectorAll('#tree-content input.label');
-        const lastInput = inputs[inputs.length - 1];
-        if (lastInput) {
-          lastInput.focus();
-          lastInput.select();
-        }
-      }, 0);
+      // Focus the new item immediately so iOS can show the keyboard.
+      const inputs = document.querySelectorAll('#tree-content input.label');
+      const lastInput = inputs[inputs.length - 1];
+      focusLabelInput(lastInput);
     });
   }
 
@@ -551,21 +746,18 @@ function registerControls() {
       parent.children.push(newNode);
       saveData(nodesRaw);
       render();
-      // Focus the new list
-      setTimeout(() => {
-        const inputs = document.querySelectorAll('#tree-content input.label');
-        const lastInput = inputs[inputs.length - 1];
-        if (lastInput) {
-          lastInput.focus();
-          lastInput.select();
-        }
-      }, 0);
+      // Focus the new list immediately so iOS can show the keyboard.
+      const inputs = document.querySelectorAll('#tree-content input.label');
+      const lastInput = inputs[inputs.length - 1];
+      focusLabelInput(lastInput);
     });
   }
 
   if (globalMarkAllDone) {
     globalMarkAllDone.addEventListener('click', () => {
       setTreeDone(getCurrentNodes(), true, true);
+      const currentNode = getCurrentParentNode();
+      sortNodeChildren(currentNode);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -575,6 +767,8 @@ function registerControls() {
   if (globalMarkAllNotDone) {
     globalMarkAllNotDone.addEventListener('click', () => {
       setTreeDone(getCurrentNodes(), false, true);
+      const currentNode = getCurrentParentNode();
+      sortNodeChildren(currentNode);
       saveData(nodesRaw);
       render();
       document.getElementById('global-context')?.classList.remove('open');
@@ -592,10 +786,23 @@ function registerControls() {
     });
   }
 
+  const globalToggleUpDown = document.getElementById('global-toggle-up-down');
+  if (globalToggleUpDown) {
+    globalToggleUpDown.addEventListener('click', () => {
+      showUpDownActions = !showUpDownActions;
+      saveSettings({ showUpDownActions });
+      render();
+      document.getElementById('global-context')?.classList.remove('open');
+    });
+  }
+
   if (backUp) {
     backUp.addEventListener('click', () => {
       if (currentPath.length > 0) {
         currentPath.pop();
+        const currentNode = getCurrentParentNode();
+        sortNodeChildren(currentNode);
+        saveData(nodesRaw);
         render();
       }
     });
@@ -773,7 +980,8 @@ function registerControls() {
       if (importFileData) {
         const currentNode = getCurrentParentNode();
         currentNode.children = currentNode.children || [];
-        currentNode.children.push(sanitizeTree(importFileData));
+        const existingIds = collectIds(nodesRaw);
+        currentNode.children.push(sanitizeTree(importFileData, existingIds));
         saveData(nodesRaw);
         render();
         closeImportDialog();
@@ -870,6 +1078,8 @@ export {
   setLevelDone,
   findNodeById,
   findParent,
+  sanitizeTree,
+  sortNodeChildren,
   render,
   renderTree
 };
