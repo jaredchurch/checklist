@@ -244,6 +244,11 @@ input[type="file"]:hover {
   padding: 0.2rem 0.4rem;
   min-width: 3rem;
 }
+.context-menu button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #e5e7eb;
+}
 
 body.menu-open * {
   pointer-events: none;

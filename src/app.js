@@ -535,12 +535,15 @@ function renderTree(nodes, container, level = 0) {
 
     contextMenu.appendChild(deleteButton);
 
+    const parent = getCurrentParentNode();
+    const isSortByCompleted = parent.sortMode === 'completed';
+    
     upButton.disabled = index === 0;
     downButton.disabled = index === nodes.length - 1;
 
     const elements = [actionControl, titleInput];
     
-    if (showUpDownActions) {
+    if (showUpDownActions && !isSortByCompleted) {
       elements.push(upButton, downButton);
     }
     
@@ -700,12 +703,18 @@ function render() {
   const parent = getCurrentParentNode();
   const sortBtn = document.getElementById('global-sort-completed');
   if (sortBtn) {
-    sortBtn.textContent = parent.sortMode === 'completed' ? 'Sort: Manual' : 'Sort: Last Completed';
+    const isCompleted = parent.sortMode === 'completed';
+    sortBtn.textContent = isCompleted ? 'Sorting by Last Completed ✓' : 'Sort by Last Completed';
   }
   
-  // Update toggle button text
   const toggleButton = document.getElementById('global-toggle-up-down');
   if (toggleButton) {
+    const isCompleted = parent.sortMode === 'completed';
+    if (isCompleted) {
+      showUpDownActions = false;
+      saveSettings({ showUpDownActions });
+    }
+    toggleButton.disabled = isCompleted;
     toggleButton.textContent = showUpDownActions ? 'Hide Sorting' : 'Show Sorting';
   }
 }
@@ -789,6 +798,8 @@ function registerControls() {
   const globalToggleUpDown = document.getElementById('global-toggle-up-down');
   if (globalToggleUpDown) {
     globalToggleUpDown.addEventListener('click', () => {
+      const parent = getCurrentParentNode();
+      if (parent.sortMode === 'completed') return;
       showUpDownActions = !showUpDownActions;
       saveSettings({ showUpDownActions });
       render();
