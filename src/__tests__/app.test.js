@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, getData, saveData, renderTree, sanitizeTree, sortNodeChildren } from '../app.js';
+import { createNode, createListNode, setTreeDone, setLevelDone, findNodeById, sanitizeTree, sortNodeChildren } from '../tree.js';
+import { getData, saveData } from '../storage.js';
+import { renderTree } from '../render.js';
 
 describe('Checklist core logic', () => {
   let root;
@@ -144,7 +146,7 @@ describe('Checklist core logic', () => {
     root.children.push(item, list);
 
     const container = document.createElement('div');
-    renderTree(root.children, container);
+    renderTree(root.children, container, { nodesRaw: root });
 
     const firstItem = container.querySelectorAll('li')[0];
     const firstItemMenuToggle = [...firstItem.querySelectorAll('button')].find((b) => b.textContent === '⋮');
