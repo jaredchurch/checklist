@@ -336,7 +336,9 @@ function renderTree(nodes, container, level = 0) {
 
     const li = document.createElement('li');
     const wrapper = document.createElement('div');
-    wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
+    const isListDone = node.type === 'list' && getDescendantItemSummary(node).total > 0 && getDescendantItemSummary(node).done === getDescendantItemSummary(node).total;
+    wrapper.className = `tree-item${(node.type === 'item' && node.done) || isListDone ? ' done' : ''}`;
+    // wrapper.className = `tree-item${node.type === 'item' && node.done ? ' done' : ''}`;
     wrapper.setAttribute('data-node-id', node.id);
 
     // Add right-click context menu support
@@ -360,7 +362,11 @@ function renderTree(nodes, container, level = 0) {
       actionControl.type = 'checkbox';
       actionControl.checked = node.done;
       actionControl.addEventListener('change', () => {
+        const wasDone = node.done;
         node.done = actionControl.checked;
+        if (node.done && !wasDone) {
+          node.lastCompletedDate = Date.now();
+        }
         const currentNode = getCurrentParentNode();
         sortNodeChildren(currentNode);
         saveData(nodesRaw);
@@ -529,12 +535,15 @@ function renderTree(nodes, container, level = 0) {
 
     contextMenu.appendChild(deleteButton);
 
+    const parent = getCurrentParentNode();
+    const isSortByCompleted = parent.sortMode === 'completed';
+    
     upButton.disabled = index === 0;
     downButton.disabled = index === nodes.length - 1;
 
     const elements = [actionControl, titleInput];
     
-    if (showUpDownActions) {
+    if (showUpDownActions && !isSortByCompleted) {
       elements.push(upButton, downButton);
     }
     
@@ -581,7 +590,63 @@ function getCurrentParentNode() {
 
 function getCurrentNodes() {
   const parent = getCurrentParentNode();
-  return Array.isArray(parent.children) ? parent.children : [];
+  const nodes = Array.isArray(parent.children) ? parent.children : [];
+  const currentSortMode = parent.sortMode || 'manual';
+  
+  const isNodeDone = (node) => {
+    if (node.type === 'item') return node.done;
+    if (node.type === 'list') {
+      const summary = getDescendantItemSummary(node);
+      return summary.total > 0 && summary.done === summary.total;
+    }
+    return false;
+  };
+  
+  const getLastCompletedDate = (node) => {
+    if (node.type === 'item') return node.lastCompletedDate;
+    if (node.type === 'list') {
+      let latest = 0;
+      let hasDate = false;
+      function findLatest(n) {
+        for (const child of n.children || []) {
+          if (child.type === 'item' && child.lastCompletedDate) {
+            hasDate = true;
+            latest = Math.max(latest, child.lastCompletedDate);
+          } else if (child.type === 'list') {
+            findLatest(child);
+          }
+        }
+      }
+      findLatest(node);
+      return hasDate ? latest : null;
+    }
+    return null;
+  };
+  
+  if (currentSortMode === 'completed') {
+    const neverCompleted = nodes.filter(n => !isNodeDone(n) && !getLastCompletedDate(n));
+    const prevCompleted = nodes.filter(n => !isNodeDone(n) && getLastCompletedDate(n));
+    const completed = nodes.filter(n => isNodeDone(n));
+    
+    const sortByListAndDate = (a, b) => {
+      const listA = a.type === 'list' ? 0 : 1;
+      const listB = b.type === 'list' ? 0 : 1;
+      if (listA !== listB) return listA - listB;
+      const dateA = getLastCompletedDate(a) || 0;
+      const dateB = getLastCompletedDate(b) || 0;
+      return dateA - dateB;
+    };
+    
+    neverCompleted.sort(sortByListAndDate);
+    prevCompleted.sort(sortByListAndDate);
+    completed.sort(sortByListAndDate);
+    
+    return [...neverCompleted, ...prevCompleted, ...completed];
+  }
+  
+  const incomplete = nodes.filter(n => !isNodeDone(n));
+  const completed = nodes.filter(n => isNodeDone(n));
+  return [...incomplete, ...completed];
 }
 
 function render() {
@@ -635,9 +700,21 @@ function render() {
     }
   }
 
-  // Update toggle button text
+  const parent = getCurrentParentNode();
+  const sortBtn = document.getElementById('global-sort-completed');
+  if (sortBtn) {
+    const isCompleted = parent.sortMode === 'completed';
+    sortBtn.textContent = isCompleted ? 'Sorting by Last Completed ✓' : 'Sort by Last Completed';
+  }
+  
   const toggleButton = document.getElementById('global-toggle-up-down');
   if (toggleButton) {
+    const isCompleted = parent.sortMode === 'completed';
+    if (isCompleted) {
+      showUpDownActions = false;
+      saveSettings({ showUpDownActions });
+    }
+    toggleButton.disabled = isCompleted;
     toggleButton.textContent = showUpDownActions ? 'Hide Sorting' : 'Show Sorting';
   }
 }
@@ -707,9 +784,22 @@ function registerControls() {
     });
   }
 
+  const globalSortCompleted = document.getElementById('global-sort-completed');
+  if (globalSortCompleted) {
+    globalSortCompleted.addEventListener('click', () => {
+      const parent = getCurrentParentNode();
+      parent.sortMode = parent.sortMode === 'completed' ? 'manual' : 'completed';
+      saveData(nodesRaw);
+      render();
+      document.getElementById('global-context')?.classList.remove('open');
+    });
+  }
+
   const globalToggleUpDown = document.getElementById('global-toggle-up-down');
   if (globalToggleUpDown) {
     globalToggleUpDown.addEventListener('click', () => {
+      const parent = getCurrentParentNode();
+      if (parent.sortMode === 'completed') return;
       showUpDownActions = !showUpDownActions;
       saveSettings({ showUpDownActions });
       render();
