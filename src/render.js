@@ -5,8 +5,7 @@
 
 import { createNode, createListNode, findParent, findNodeById, getDescendantItemSummary, sortNodeChildren } from './tree.js'
 import { getCurrentNodes } from './sorting.js'
-import { saveData } from './storage.js'
-import { saveSettings, getSettings } from './storage.js'
+import { saveData, saveSettings, getSettings } from './storage.js'
 
 // Module-level state (fallback when refs not provided)
 let nodesRaw
