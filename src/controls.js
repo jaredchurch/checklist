@@ -4,11 +4,11 @@
  */
 
 import { createNode, createListNode, setTreeDone, sortNodeChildren, findParent } from './tree.js'
-import { saveData, saveSettings } from './storage.js'
-import { render, updateMenuLock, getCurrentParentNode } from './render.js'
+import { saveData, saveSettings, getSettings } from './storage.js'
+import { render, updateMenuLock, getCurrentParentNode, setState } from './render.js'
 import { exportData, exportSubListData, setupImportDialog, setupAboutDialog } from './dialogs.js'
 
-let showUpDownActions = false
+let showUpDownActions = getSettings().showUpDownActions || false
 
 /**
  * Set the showUpDownActions state (for backward compatibility)
@@ -123,6 +123,7 @@ export function registerControls(nodesRef, currentPathRef, renderFn) {
       if (parent.sortMode === 'completed') return
       showUpDownActions = !showUpDownActions
       saveSettings({ showUpDownActions })
+      setState({ showUpDownActions })
       renderFn()
       globalContext?.classList.remove('open')
     })
