@@ -9,6 +9,7 @@
  *  5. No Firebase → skip auth entirely, render with local data only
  */
 
+import { createListNode } from './tree.js'
 import { getData, registerSyncHook } from './storage.js'
 import { registerControls } from './controls.js'
 import { render, initState } from './render.js'
@@ -37,9 +38,11 @@ function init () {
 
   // ── Helper: boot the app with a given dataset ──────────────────────────────
   function bootApp (data) {
-    nodesRef.current       = data
+    const defaultList = createListNode('My Checklist')
+    nodesRef.current       = data || defaultList
     currentPathRef.current = []
-    initState(data)
+    initState(nodesRef.current)
+    if (!data) saveData(nodesRef.current)
     renderFn()
   }
 

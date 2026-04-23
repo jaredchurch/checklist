@@ -38,8 +38,15 @@ export function registerControls(nodesRef, currentPathRef, renderFn) {
   // Add item button - creates a new item and focuses it
   if (addItem) {
     addItem.addEventListener('click', () => {
-      const nodesRaw = getNodesRaw()
+      let nodesRaw = getNodesRaw()
+      if (!nodesRaw) {
+        const defaultList = createListNode('My Checklist')
+        nodesRef.current = defaultList
+        nodesRaw = defaultList
+        saveData(nodesRaw)
+      }
       const parent = getCurrentParentNode(nodesRaw, getCurrentPath())
+      if (!parent) return
       parent.children = parent.children || []
       const newNode = createNode()
       const newNodeId = newNode.id
