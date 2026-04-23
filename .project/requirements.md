@@ -1,4 +1,7 @@
-- [] REQ1: optimise for phone screen - large touch targets.
+- [x] REQ1: optimise for phone screen - large touch targets.
+  - Minimum 44x44px touch targets for all interactive elements
+  - Larger base font size (18px) for mobile readability
+  - All UI elements: checkboxes, action buttons, add buttons, navigation
 - [x] REQ2: source to be kept in subfolder <project-root>/src
 - [x] REQ3: single web-page that can work as progressive web app.
 - [x] REQ4: infinite tree of checklist items (nested sub-lists)
@@ -13,6 +16,7 @@
 - [x] REQ13: PWA installable on desktop and iOS
 - [x] REQ14: service worker caching + offline support
 - [x] REQ15: vitest regression tests
+
 
 ## Implementation Notes
 
