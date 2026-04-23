@@ -1,0 +1,1 @@
+- [x] BUG1: bootstrapping, when user arrives for first time (offline mode) they are unable to start because no list exists.
