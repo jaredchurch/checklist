@@ -1,0 +1,3 @@
+- [] REQ1: optimise for phone screen - large touch targets.
+- [x] REQ2: source to be kept in subfolder <project-root>/src
+- [x] REQ3: single web-page that can work as progressive web app.
