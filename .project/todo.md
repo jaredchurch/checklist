@@ -1,3 +1,7 @@
 - [] 1: remove the sorting arrows and option to turn those on/off in the global context menu.
 - [] 2: create a www folder, and move all objects that get served into that sub-folder
 - [] 3: change the favicon-180.png - put it into a favicon.ico object (to get rid of favicon.ico error in console)
+- [] 4: review firebase design for security. each user should have to connect to their own firebase - credentials for it should be stored in local storage and handled as secure elements.
+- [] 5: segregate CSS, javascript and html - they should not be in the same files. Add notes on this to agents.md
+- [] 6: add notes to agents.md that headers and comments (explain why of code) should always be written in code.
+- [] 7: resolve linting errors
