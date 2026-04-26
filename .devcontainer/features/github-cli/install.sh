@@ -3,6 +3,8 @@ set -e
 
 # refer: https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian
 
+export DEBIAN_FRONTEND=noninteractive
+
 (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
 	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
 	&& out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \

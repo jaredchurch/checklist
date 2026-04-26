@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-# refer: https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian
+
+export DEBIAN_FRONTEND=noninteractive
 
 if [ ! -x "$(command -v node)" ] || [ ! -x "$(command -v npm)" ]; then
   echo "Node.js and npm are not installed. Installing them first..."
