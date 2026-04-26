@@ -5,3 +5,4 @@
 - [] 5: segregate CSS, javascript and html - they should not be in the same files. Add notes on this to agents.md
 - [] 6: add notes to agents.md that headers and comments (explain why of code) should always be written in code.
 - [] 7: resolve linting errors
+- [] 8: review code & commit history and expand requirements based on what is there now.
