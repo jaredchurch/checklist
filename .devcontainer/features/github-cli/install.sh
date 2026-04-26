@@ -7,3 +7,5 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githu
 sudo apt-get update
 sudo apt-get install gh
 echo "✅ Done"
+
+### End of File
