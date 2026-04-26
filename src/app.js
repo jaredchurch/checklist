@@ -105,14 +105,23 @@ async function fetchCommitInfo () {
   if (!el) return
   const owner = 'jaredchurch'; const repo = 'checklist'
   try {
+    let commit = null
     let branch = 'main'
-    const pagesResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/pages`)
-    if (pagesResp.ok) {
-      branch = (await pagesResp.json()).source?.branch || branch
+    // Try main branch first
+    let commitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/main`)
+    if (commitResp.ok) {
+      commit = await commitResp.json()
+    } else {
+      // Fallback to master
+      branch = 'master'
+      commitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/master`)
+      if (commitResp.ok) {
+        commit = await commitResp.json()
+      }
     }
-    const commitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${branch}`)
-    if (!commitResp.ok) throw new Error(commitResp.status)
-    const commit = await commitResp.json()
+
+    if (!commit) throw new Error('Commit info not found')
+    
     const hash = commit.sha.slice(0, 7)
     const date = new Date(commit.commit.committer.date).toLocaleString()
     el.textContent = `Commit ${hash} @ ${date} (${branch})`
