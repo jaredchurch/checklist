@@ -186,6 +186,46 @@ export function renderTree (nodes, container, options = {}) {
   ul.style.listStyle = 'none'
   ul.style.paddingLeft = '0'
 
+  let draggedLi = null
+  let draggedNodeId = null
+
+  ul.addEventListener('dragover', (evt) => {
+    evt.preventDefault()
+    const afterCard = getDragAfterElement(ul, evt.clientY)
+    if (afterCard == null) {
+      ul.appendChild(draggedLi)
+    } else {
+      ul.insertBefore(draggedLi, afterCard.parentNode)
+    }
+  })
+
+  ul.addEventListener('drop', (evt) => {
+    evt.preventDefault()
+    if (!draggedNodeId) return
+    const newOrder = Array.from(ul.children).map((li) => li.querySelector('.item-card').getAttribute('data-node-id'))
+    const parent = getParentNode()
+    if (!parent || !parent.children) return
+    const sortedNodes = newOrder.map((id) => parent.children.find((c) => c.id === id)).filter(Boolean)
+    parent.children = sortedNodes
+    saveData(nodesRawRef)
+    onToggleDone()
+    draggedLi = null
+    draggedNodeId = null
+  })
+
+  function getDragAfterElement (container, y) {
+    const draggableElements = [...container.querySelectorAll('.item-card:not(.dragging)')]
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect()
+      const offset = y - box.top - box.height / 2
+      if (offset < 0 && offset > closest.offset) {
+        return { offset, element: child }
+      } else {
+        return closest
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element
+  }
+
   nodes.forEach((node, index) => {
     if (node.type === 'item') {
       node.children = []
@@ -194,7 +234,19 @@ export function renderTree (nodes, container, options = {}) {
     const li = document.createElement('li')
     const card = document.createElement('div')
     card.className = 'item-card'
-    card.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.5rem;position:relative;width:100%;'
+    card.draggable = true
+    card.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.5rem;position:relative;width:100%;cursor:grab;'
+    card.setAttribute('data-node-id', node.id)
+
+    card.addEventListener('dragstart', () => {
+      draggedLi = li
+      draggedNodeId = node.id
+      setTimeout(() => card.classList.add('dragging'), 0)
+    })
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging')
+    })
     const wrapper = document.createElement('div')
     wrapper.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex:1;width:100%;'
     const isListDone = node.type === 'list' && getDescendantItemSummary(node).total > 0 && getDescendantItemSummary(node).done === getDescendantItemSummary(node).total

@@ -123,6 +123,10 @@ input[type="file"]:hover {
   gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
+.item-card.dragging {
+  opacity: 0.5;
+  background: #e2e8f0;
+}
 .tree-item input[type="checkbox"] {
   width: 28px;
   height: 28px;
