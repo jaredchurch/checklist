@@ -6,6 +6,7 @@
 import { createNode, createListNode, findParent, findNodeById, getDescendantItemSummary, sortNodeChildren } from './tree.js'
 import { getCurrentNodes } from './sorting.js'
 import { saveData, saveSettings, getSettings } from './storage.js'
+import { showRenameDialog } from './dialogs.js'
 
 // Module-level state (fallback when refs not provided)
 let nodesRaw
@@ -205,33 +206,35 @@ export function renderTree (nodes, container, options = {}) {
       }
     })
 
-    const titleInput = document.createElement('input')
-
-    // Create action control (checkbox for items, drill-in button for lists)
-    const actionControl = document.createElement(node.type === 'item' ? 'input' : 'button')
+    const actionControl = document.createElement('button')
 
     if (node.type === 'item') {
-      // Checkbox for items
-      actionControl.type = 'checkbox'
-      actionControl.checked = node.done
-      actionControl.addEventListener('change', () => {
-        const wasDone = node.done
-        node.done = actionControl.checked
-        if (node.done && !wasDone) {
+      // Checkmark button for items (always shows checkmark, styled differently when done)
+      actionControl.textContent = '✓'
+      actionControl.className = 'small-button'
+      actionControl.style.minWidth = '1.5rem'
+      actionControl.style.height = '1.5rem'
+      actionControl.style.marginRight = '0.25rem'
+      actionControl.style.color = node.done ? '#16a34a' : '#9ca3af'
+      actionControl.title = node.done ? 'Mark as not done' : 'Mark as done'
+      actionControl.addEventListener('click', () => {
+        node.done = !node.done
+        if (node.done && !node.lastCompletedDate) {
           node.lastCompletedDate = Date.now()
         }
+        actionControl.style.color = node.done ? '#16a34a' : '#9ca3af'
+        actionControl.title = node.done ? 'Mark as not done' : 'Mark as done'
         const currentNode = getParentNode()
         sortNodeChildren(currentNode)
         saveData(nodesRawRef)
         onToggleDone()
       })
-      actionControl.style.minWidth = '1rem'
-      actionControl.style.marginRight = '0.5rem'
     } else {
-      // Drill-in button for lists
-      actionControl.textContent = '↓'
+      // Drill-in button for lists (folder icon)
+      actionControl.innerHTML = '📁'
       actionControl.className = 'small-button'
-      actionControl.style.minWidth = '1rem'
+      actionControl.style.minWidth = '1.5rem'
+      actionControl.style.height = '1.5rem'
       actionControl.style.marginRight = '0.5rem'
       actionControl.title = 'Drill In'
       actionControl.addEventListener('click', () => {
@@ -240,69 +243,27 @@ export function renderTree (nodes, container, options = {}) {
       })
     }
 
-    // Title input field
-    titleInput.type = 'text'
-    titleInput.value = node.title
-    titleInput.className = 'label'
-    titleInput.addEventListener('change', () => {
-      node.title = titleInput.value
-      node.isNew = false
-      saveData(nodesRawRef)
-      onToggleDone()
-    })
-    titleInput.addEventListener('blur', () => {
-      node.isNew = false
-    })
+    // Title span (click to toggle done for items, drill in for lists)
+    const titleLabel = document.createElement(node.type === 'item' ? 'span' : 'button')
+    titleLabel.textContent = node.title
+    titleLabel.className = 'title'
+    titleLabel.style.cssText = 'flex:1;font-size:inherit;padding:0.5rem;cursor:pointer;text-align:left;background:transparent;border:none;'
 
-    // Keyboard handling for Enter (create new item) and Escape (delete new item)
-    titleInput.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Enter') {
-        evt.preventDefault()
-        node.title = titleInput.value
-        node.isNew = false
-        if (node.type === 'item') {
-          const parent = findParent(nodesRawRef, node.id)
-          const array = parent ? parent.children : nodesRawRef.children
-          const idx = array.findIndex((c) => c.id === node.id)
-          if (idx !== -1) {
-            const newNode = createNode()
-            const newNodeId = newNode.id
-            array.splice(idx + 1, 0, newNode)
-            saveData(nodesRawRef)
-            onToggleDone()
-            const newInput = document.querySelector(`[data-node-id="${newNodeId}"] input.label`)
-            focusLabelInput(newInput)
-          }
-        } else if (node.type === 'list') {
-          currentPathRef.push(node.id)
-          const listNode = findNodeById(nodesRawRef, node.id)
-          if (listNode) {
-            listNode.children = listNode.children || []
-            const newNode = createNode()
-            const newNodeId = newNode.id
-            listNode.children.push(newNode)
-            saveData(nodesRawRef)
-            onToggleDone()
-            const newInput = document.querySelector(`[data-node-id="${newNodeId}"] input.label`)
-            focusLabelInput(newInput)
-          } else {
-            onToggleDone()
-          }
-        }
-      } else if (evt.key === 'Escape') {
-        if (node.isNew) {
-          evt.preventDefault()
-          const parent = findParent(nodesRawRef, node.id)
-          const array = parent ? parent.children : nodesRawRef.children
-          const idx = array.findIndex((c) => c.id === node.id)
-          if (idx !== -1) {
-            array.splice(idx, 1)
-            saveData(nodesRawRef)
-            onToggleDone()
-          }
-        }
+    if (node.type === 'item') {
+      titleLabel.addEventListener('click', () => {
+        actionControl.click()
+      })
+      if (node.done) {
+        titleLabel.style.textDecoration = 'line-through'
+        titleLabel.style.opacity = '0.6'
       }
-    })
+    } else if (node.type === 'list') {
+      titleLabel.style.fontWeight = '500'
+      titleLabel.addEventListener('click', () => {
+        currentPathRef.push(node.id)
+        onToggleDone()
+      })
+    }
 
     // Move up button
     const upButton = document.createElement('button')
@@ -362,9 +323,21 @@ export function renderTree (nodes, container, options = {}) {
       }
     })
 
-    // Context menu with delete option
+    // Context menu with delete and rename options
     const contextMenu = document.createElement('div')
     contextMenu.className = 'item-context-menu context-menu'
+
+    const renameButton = document.createElement('button')
+    renameButton.textContent = 'Rename'
+    renameButton.addEventListener('click', () => {
+      showRenameDialog(node.title, (newTitle) => {
+        node.title = newTitle
+        saveData(nodesRawRef)
+        onToggleDone()
+      })
+      contextMenu.classList.remove('open')
+      updateMenuLock()
+    })
 
     const deleteButton = document.createElement('button')
     deleteButton.textContent = 'Delete'
@@ -382,6 +355,7 @@ export function renderTree (nodes, container, options = {}) {
       updateMenuLock()
     })
 
+    contextMenu.appendChild(renameButton)
     contextMenu.appendChild(deleteButton)
 
     // Configure button states based on sort mode
@@ -392,7 +366,7 @@ export function renderTree (nodes, container, options = {}) {
     downButton.disabled = index === nodes.length - 1
 
     // Build element array
-    const elements = [actionControl, titleInput]
+    const elements = [actionControl, titleLabel]
 
     if (showUpDownRef && !isSortByCompleted) {
       elements.push(upButton, downButton)

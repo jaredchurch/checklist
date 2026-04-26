@@ -66,6 +66,76 @@ export function promptImportData (nodesRaw, renderFn) {
 }
 
 /**
+ * Show rename dialog and return the new name (via callback) or null if cancelled
+ */
+export function showRenameDialog (currentName, onRename) {
+  const overlay = document.createElement('div')
+  overlay.className = 'rename-dialog'
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:100;'
+
+  const content = document.createElement('div')
+  content.style.cssText = 'background:#fff;border-radius:0.5rem;padding:1.5rem;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,0.2);'
+
+  const title = document.createElement('h2')
+  title.textContent = 'Rename'
+  title.style.marginTop = '0'
+
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.value = currentName
+  input.style.cssText = 'width:100%;padding:0.75rem;font-size:1rem;border:1.5px solid #cbd5e1;border-radius:0.35rem;margin:1rem 0;'
+
+  const buttons = document.createElement('div')
+  buttons.style.cssText = 'display:flex;gap:0.5rem;justify-content:flex-end;'
+
+  const cancelBtn = document.createElement('button')
+  cancelBtn.textContent = 'Cancel'
+  cancelBtn.style.cssText = 'padding:0.75rem 1rem;'
+
+  const saveBtn = document.createElement('button')
+  saveBtn.textContent = 'Save'
+  saveBtn.style.cssText = 'padding:0.75rem 1rem;background:#1a73e8;color:#fff;border:none;'
+
+  buttons.appendChild(cancelBtn)
+  buttons.appendChild(saveBtn)
+  content.appendChild(title)
+  content.appendChild(input)
+  content.appendChild(buttons)
+  overlay.appendChild(content)
+  document.body.appendChild(overlay)
+
+  const close = () => {
+    document.body.removeChild(overlay)
+  }
+
+  cancelBtn.addEventListener('click', close)
+
+  saveBtn.addEventListener('click', () => {
+    onRename(input.value)
+    close()
+  })
+
+  overlay.addEventListener('click', (evt) => {
+    if (evt.target === overlay) {
+      close()
+    }
+  })
+
+  input.focus()
+  input.select()
+
+  input.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Enter') {
+      onRename(input.value)
+      close()
+    }
+    if (evt.key === 'Escape') {
+      close()
+    }
+  })
+}
+
+/**
  * Prompt for import and add as sub-list to current location
  */
 export function promptImportSubListData (nodesRaw, currentNode, renderFn) {
