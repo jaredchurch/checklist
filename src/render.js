@@ -189,7 +189,11 @@ export function renderTree (nodes, container, options = {}) {
   let draggedLi = null
   let draggedNodeId = null
 
+  const parentNode = getParentNode()
+  const isSortByCompleted = parentNode.sortMode === 'completed'
+
   ul.addEventListener('dragover', (evt) => {
+    if (isSortByCompleted) return
     evt.preventDefault()
     const afterCard = getDragAfterElement(ul, evt.clientY)
     if (afterCard == null) {
@@ -200,6 +204,7 @@ export function renderTree (nodes, container, options = {}) {
   })
 
   ul.addEventListener('drop', (evt) => {
+    if (isSortByCompleted) return
     evt.preventDefault()
     if (!draggedNodeId) return
     const newOrder = Array.from(ul.children).map((li) => li.querySelector('.item-card').getAttribute('data-node-id'))
@@ -234,8 +239,8 @@ export function renderTree (nodes, container, options = {}) {
     const li = document.createElement('li')
     const card = document.createElement('div')
     card.className = 'item-card'
-    card.draggable = true
-    card.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.5rem;position:relative;width:100%;cursor:grab;'
+    card.draggable = !isSortByCompleted
+    card.style.cssText = `display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.5rem;position:relative;width:100%;cursor:${isSortByCompleted ? 'default' : 'grab'};`
     card.setAttribute('data-node-id', node.id)
 
     card.addEventListener('dragstart', () => {
@@ -250,16 +255,20 @@ export function renderTree (nodes, container, options = {}) {
     const wrapper = document.createElement('div')
     wrapper.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex:1;width:100%;'
     const isListDone = node.type === 'list' && getDescendantItemSummary(node).total > 0 && getDescendantItemSummary(node).done === getDescendantItemSummary(node).total
-    wrapper.className = `tree-item${(node.type === 'item' && node.done) || isListDone ? ' done' : ''}`
+    const isDone = (node.type === 'item' && node.done) || isListDone
+    wrapper.className = `tree-item${isDone ? ' done' : ''}`
     wrapper.setAttribute('data-node-id', node.id)
 
     // Right-click context menu support
     wrapper.addEventListener('contextmenu', (evt) => {
       evt.preventDefault()
-      document.querySelectorAll('.item-context-menu.open').forEach(menu => menu.classList.remove('open'))
-      const menu = wrapper.querySelector('.item-context-menu')
-      if (menu) {
+      const isAlreadyOpen = card.querySelector('.item-context-menu.open')
+      document.querySelectorAll('.context-menu.open').forEach(menu => menu.classList.remove('open'))
+      const menu = card.querySelector('.item-context-menu')
+      if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
+        updateMenuLock()
+      } else {
         updateMenuLock()
       }
     })
@@ -311,16 +320,17 @@ export function renderTree (nodes, container, options = {}) {
       titleLabel.addEventListener('click', () => {
         actionControl.click()
       })
-      if (node.done) {
-        titleLabel.style.textDecoration = 'line-through'
-        titleLabel.style.opacity = '0.6'
-      }
     } else if (node.type === 'list') {
       titleLabel.style.fontWeight = '500'
       titleLabel.addEventListener('click', () => {
         currentPathRef.push(node.id)
         onToggleDone()
       })
+    }
+
+    if (isDone) {
+      titleLabel.style.textDecoration = 'line-through'
+      titleLabel.style.opacity = '0.6'
     }
 
     // Move up button
@@ -373,10 +383,13 @@ export function renderTree (nodes, container, options = {}) {
     contextToggle.title = 'More options'
     contextToggle.addEventListener('click', (evt) => {
       evt.stopPropagation()
-      document.querySelectorAll('.item-context-menu.open').forEach(menu => menu.classList.remove('open'))
-      const menu = wrapper.querySelector('.item-context-menu')
-      if (menu) {
+      const isAlreadyOpen = card.querySelector('.item-context-menu.open')
+      document.querySelectorAll('.context-menu.open').forEach(menu => menu.classList.remove('open'))
+      const menu = card.querySelector('.item-context-menu')
+      if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
+        updateMenuLock()
+      } else {
         updateMenuLock()
       }
     })
@@ -417,10 +430,8 @@ export function renderTree (nodes, container, options = {}) {
     contextMenu.appendChild(deleteButton)
 
     // Configure button states based on sort mode
-    const parent = getParentNode()
-    const isSortByCompleted = parent.sortMode === 'completed'
-
     upButton.disabled = index === 0
+
     downButton.disabled = index === nodes.length - 1
 
     // Build element array

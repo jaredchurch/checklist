@@ -49,15 +49,14 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       if (!parent) return
       parent.children = parent.children || []
       const newNode = createNode()
-      const newNodeId = newNode.id
       parent.children.push(newNode)
       saveData(nodesRaw)
       renderFn()
-      const newInput = document.querySelector(`[data-node-id="${newNodeId}"] input.label`)
-      if (newInput) {
-        newInput.focus()
-        newInput.select()
-      }
+      showRenameDialog(newNode.title, (newTitle) => {
+        newNode.title = newTitle
+        saveData(nodesRaw)
+        renderFn()
+      })
       globalContextLeft?.classList.remove('open')
     })
   }
@@ -69,15 +68,14 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       const parent = getCurrentParentNode(nodesRaw, getCurrentPath())
       parent.children = parent.children || []
       const newNode = createListNode()
-      const newNodeId = newNode.id
       parent.children.push(newNode)
       saveData(nodesRaw)
       renderFn()
-      const newInput = document.querySelector(`[data-node-id="${newNodeId}"] input.label`)
-      if (newInput) {
-        newInput.focus()
-        newInput.select()
-      }
+      showRenameDialog(newNode.title, (newTitle) => {
+        newNode.title = newTitle
+        saveData(nodesRaw)
+        renderFn()
+      })
       globalContextLeft?.classList.remove('open')
     })
   }
