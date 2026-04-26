@@ -1,0 +1,12 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/base:trixie",
+	"features": {
+		"./features/opencode": {},
+		"./features/locale-nz": {},
+		"./features/github-cli": {}
+	},
+	"containerEnv": {
+		"LANG": "en_NZ.UTF-8",
+		"LC_ALL": "en_NZ.UTF-8"
+	}
+}

@@ -7,6 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="icons/favicon-180.png" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="manifest" href="manifest.webmanifest" />
     <title>Checklist</title>
     <link rel="stylesheet" href="src/style.css" />
@@ -295,41 +296,41 @@
     <!-- ══ MAIN APP ════════════════════════════════════════════════════════ -->
     <div id="app">
       <header>
-        <h1>Checklist</h1>
-        <!-- Sync status pill -->
         <span id="sync-status" class="sync-status"></span>
-        <!-- User bar (avatar + name + sign out) -->
+        <h1 id="list-title">Checklist</h1>
         <div id="auth-user-bar">
           <img id="auth-user-avatar" src="" alt="avatar" style="display:none;" />
           <span id="auth-user-name"></span>
           <button id="auth-signout-btn">Sign out</button>
         </div>
+        <div class="header-menus">
+          <div class="header-context-menu left">
+            <button id="global-context-toggle-left" class="small-button context-toggle">+</button>
+            <div id="global-context-left" class="context-menu left">
+              <button id="global-add-item">Add Item</button>
+              <button id="global-add-list">Add List</button>
+            </div>
+          </div>
+          <div class="header-context-menu">
+            <button id="global-context-toggle" class="small-button context-toggle">⋮</button>
+            <div id="global-context" class="context-menu">
+              <button id="global-mark-all-done">Mark All Done</button>
+              <button id="global-mark-all-not-done">Mark All Not Done</button>
+              <button id="global-sort-completed">Sort by Completed</button>
+              <button id="global-toggle-up-down">Show Up/Down Actions</button>
+              <button id="global-export">Export JSON</button>
+              <button id="global-import">Import JSON</button>
+              <button id="global-about">About</button>
+            </div>
+          </div>
+        </div>
       </header>
 
       <main>
-        <nav id="breadcrumb" class="breadcrumb"></nav>
-        <section id="tree" class="tree">
-          <section id="controls" class="controls">
-            <button id="back-up" class="back-up hidden" aria-label="Back">←</button>
-            <button id="add-item">Add Item</button>
-            <button id="add-list">Add List</button>
-
-            <div class="global-context-menu">
-              <button id="global-context-toggle" class="small-button context-toggle">⋮</button>
-              <div id="global-context" class="context-menu">
-                <button id="global-mark-all-done">Mark All Done</button>
-                <button id="global-mark-all-not-done">Mark All Not Done</button>
-                <button id="global-sort-completed">Sort by Completed</button>
-                <button id="global-toggle-up-down">Show Up/Down Actions</button>
-                <button id="global-export">Export JSON</button>
-                <button id="global-import">Import JSON</button>
-                <button id="global-about">About</button>
-              </div>
-            </div>
-          </section>
-
-          <section id="tree-content"></section>
+        <section id="controls" class="controls">
         </section>
+
+        <section id="tree-content"></section>
 
         <!-- About dialog -->
         <div id="about-dialog" class="about-dialog" role="dialog" aria-modal="true"
@@ -358,6 +359,10 @@
           </div>
         </div>
       </main>
+
+      <footer id="breadcrumb-bar" class="breadcrumb-bar">
+        <nav id="breadcrumb" class="breadcrumb"></nav>
+      </footer>
     </div>
 
     <script type="module" src="src/main.js"></script>

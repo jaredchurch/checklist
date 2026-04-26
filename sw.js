@@ -24,9 +24,9 @@ const PRECACHE_ASSETS = [
   '/src/sorting.js',
   '/src/utils.js',
   '/src/style.css',
-  '/icons/favicon-180.png'
+  '/icons/favicon-180.png',
+  '/favicon.ico'
 ]
-
 // ── Install: pre-cache app shell ─────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -36,7 +36,7 @@ self.addEventListener('install', event => {
         PRECACHE_ASSETS.map(url =>
           fetch(url).then(res => {
             if (res.ok) cache.put(url, res)
-          }).catch(() => {/* ignore missing assets during install */})
+          }).catch(() => { /* ignore missing assets during install */ })
         )
       )
     })

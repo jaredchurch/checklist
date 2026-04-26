@@ -9,11 +9,12 @@
     "serve": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "lint": "eslint . --ext .js,.html",
+    "lint": "eslint . --ext .js",
     "start": "npm run dev"
   },
   "dependencies": {
-    "idb-keyval": "^6.0.0"
+    "idb-keyval": "^6.0.0",
+    "opencode-ai": "^1.14.25"
   },
   "devDependencies": {
     "@testing-library/dom": "^8.0.0",

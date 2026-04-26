@@ -13,10 +13,59 @@ body {
   max-width: 800px;
   margin: 0 auto;
   padding: 1rem;
+  padding-bottom: 4rem;
+}
+.breadcrumb-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #cbd5e1;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 50;
 }
 header {
   text-align: center;
   margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  min-height: 3rem;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+header .sync-status {
+  position: absolute;
+  left: 0;
+  top: .25rem;
+}
+header .auth-user-bar {
+  position: absolute;
+  left: 0;
+  top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-menus {
+  position: absolute;
+  right: 0;
+  top: .25rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.header-context-menu .context-menu {
+  right: 0;
+}
+
+#sync-status.syncing {
+  order: -1;
 }
 .controls {
   margin-bottom: 1rem;
@@ -28,16 +77,6 @@ header {
   align-items: center;
 }
 
-.controls .back-up {
-  min-width: 2.5rem;
-  text-align: center;
-}
-
-.controls .back-up.hidden {
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
 .global-context-menu {
   position: relative;
   margin-left: auto;
@@ -72,10 +111,11 @@ input[type="file"]:hover {
   border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   padding: .75rem;
+  overflow: hidden;
 }
 .tree ul {
   list-style: none;
-  padding-left: 1.2rem;
+  padding-left: 0;
 }
 .tree-item {
   display: flex;
@@ -83,7 +123,10 @@ input[type="file"]:hover {
   gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
-
+.item-card.dragging {
+  opacity: 0.5;
+  background: #e2e8f0;
+}
 .tree-item input[type="checkbox"] {
   width: 28px;
   height: 28px;
@@ -102,21 +145,20 @@ input[type="file"]:hover {
   text-decoration: line-through;
   opacity: .6;
 }
-.tree-item {
-  position: relative;
-}
 .breadcrumb {
-  margin-bottom: .75rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
 }
 .breadcrumb button {
   background: none;
   border: none;
   color: #4f46e5;
-  padding: 0.5rem;
-  min-height: 44px;
-  min-width: 44px;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
+  font-size: 0.95rem;
 }
 .breadcrumb button:hover {
   text-decoration: underline;

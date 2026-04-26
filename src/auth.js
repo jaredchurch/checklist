@@ -16,27 +16,20 @@ import {
   isFirebaseConfigured
 } from './firebase.js'
 
-let _onSignedIn  = null  // (user) => void
-let _onSignedOut = null  // ()     => void
-
 // ── Overlay elements ─────────────────────────────────────────────────────────
-function overlay ()    { return document.getElementById('auth-overlay') }
-function authForm ()   { return document.getElementById('auth-form') }
-function authMsg ()    { return document.getElementById('auth-message') }
-function authEmail ()  { return document.getElementById('auth-email') }
-function authPwd ()    { return document.getElementById('auth-password') }
+function overlay () { return document.getElementById('auth-overlay') }
+function authForm () { return document.getElementById('auth-form') }
+function authMsg () { return document.getElementById('auth-message') }
+function authEmail () { return document.getElementById('auth-email') }
+function authPwd () { return document.getElementById('auth-password') }
 function authSubmit () { return document.getElementById('auth-submit') }
 
-// ── Public API ────────────────────────────────────────────────────────────────
 /**
  * Initialise auth module.
  * If Firebase is not configured the overlay is never shown and the app
  * runs in local-only mode (same as before).
  */
 export function initAuth ({ onSignedIn, onSignedOut }) {
-  _onSignedIn  = onSignedIn
-  _onSignedOut = onSignedOut
-
   if (!isFirebaseConfigured()) {
     // No Firebase — run in local-only mode, hide any auth UI
     document.getElementById('auth-overlay')?.remove()
@@ -82,14 +75,14 @@ function buildUserBar () {
 }
 
 function updateUserBar (user) {
-  const bar   = document.getElementById('auth-user-bar')
-  const name  = document.getElementById('auth-user-name')
-  const avatar= document.getElementById('auth-user-avatar')
+  const bar = document.getElementById('auth-user-bar')
+  const name = document.getElementById('auth-user-name')
+  const avatar = document.getElementById('auth-user-avatar')
   if (!bar) return
 
   if (user) {
     bar.style.display = 'flex'
-    if (name)   name.textContent  = user.displayName || user.email || 'Signed in'
+    if (name) name.textContent = user.displayName || user.email || 'Signed in'
     if (avatar) {
       if (user.photoURL) {
         avatar.src = user.photoURL
@@ -127,7 +120,7 @@ export function bindAuthOverlay () {
   authForm()?.addEventListener('submit', async e => {
     e.preventDefault()
     const email = authEmail()?.value.trim()
-    const pwd   = authPwd()?.value
+    const pwd = authPwd()?.value
 
     if (authMode === 'reset') {
       await handleReset(email)
@@ -152,17 +145,13 @@ export function bindAuthOverlay () {
   // Google
   document.getElementById('auth-google-btn')?.addEventListener('click', async () => {
     setLoading(true)
-    try { await loginGoogle() }
-    catch (err) { showMsg(friendlyError(err), 'error') }
-    finally { setLoading(false) }
+    try { await loginGoogle() } catch (err) { showMsg(friendlyError(err), 'error') } finally { setLoading(false) }
   })
 
   // Apple
   document.getElementById('auth-apple-btn')?.addEventListener('click', async () => {
     setLoading(true)
-    try { await loginApple() }
-    catch (err) { showMsg(friendlyError(err), 'error') }
-    finally { setLoading(false) }
+    try { await loginApple() } catch (err) { showMsg(friendlyError(err), 'error') } finally { setLoading(false) }
   })
 }
 
@@ -183,20 +172,22 @@ function setMode (mode) {
   authMode = mode
   clearMsg()
 
-  const loginSection    = document.getElementById('auth-login-section')
+  const loginSection = document.getElementById('auth-login-section')
   const registerSection = document.getElementById('auth-register-section')
-  const resetSection    = document.getElementById('auth-reset-section')
-  const pwdWrap         = document.getElementById('auth-pwd-wrap')
-  const submitBtn       = authSubmit()
+  const resetSection = document.getElementById('auth-reset-section')
+  const pwdWrap = document.getElementById('auth-pwd-wrap')
+  const submitBtn = authSubmit()
 
   loginSection?.classList.toggle('hidden', mode !== 'login')
   registerSection?.classList.toggle('hidden', mode !== 'register')
   resetSection?.classList.toggle('hidden', mode !== 'reset')
   if (pwdWrap) pwdWrap.style.display = mode === 'reset' ? 'none' : 'block'
   if (submitBtn) {
-    submitBtn.textContent = mode === 'login' ? 'Sign in'
-                          : mode === 'register' ? 'Create account'
-                          : 'Send reset email'
+    submitBtn.textContent = mode === 'login'
+      ? 'Sign in'
+      : mode === 'register'
+        ? 'Create account'
+        : 'Send reset email'
   }
 }
 
@@ -204,16 +195,16 @@ function setLoading (on) {
   const btn = authSubmit()
   if (btn) btn.disabled = on
   const google = document.getElementById('auth-google-btn')
-  const apple  = document.getElementById('auth-apple-btn')
+  const apple = document.getElementById('auth-apple-btn')
   if (google) google.disabled = on
-  if (apple)  apple.disabled  = on
+  if (apple) apple.disabled = on
 }
 
 function showMsg (msg, type = 'error') {
   const el = authMsg()
   if (!el) return
   el.textContent = msg
-  el.className   = 'auth-message ' + type
+  el.className = 'auth-message ' + type
 }
 function clearMsg () {
   const el = authMsg()
@@ -222,14 +213,14 @@ function clearMsg () {
 
 function friendlyError (err) {
   const map = {
-    'auth/user-not-found':       'No account found with that email.',
-    'auth/wrong-password':       'Incorrect password.',
-    'auth/invalid-credential':   'Incorrect email or password.',
+    'auth/user-not-found': 'No account found with that email.',
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/invalid-credential': 'Incorrect email or password.',
     'auth/email-already-in-use': 'An account already exists with that email.',
-    'auth/weak-password':        'Password must be at least 6 characters.',
-    'auth/invalid-email':        'Please enter a valid email address.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/invalid-email': 'Please enter a valid email address.',
     'auth/popup-closed-by-user': 'Sign-in popup was closed.',
-    'auth/popup-blocked':        'Pop-up blocked — please allow pop-ups for this site.',
+    'auth/popup-blocked': 'Pop-up blocked — please allow pop-ups for this site.',
     'auth/cancelled-popup-request': 'Sign-in cancelled.'
   }
   return map[err.code] || err.message || 'Something went wrong. Please try again.'

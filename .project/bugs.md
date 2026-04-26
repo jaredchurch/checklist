@@ -1,1 +1,5 @@
 - [x] BUG1: bootstrapping, when user arrives for first time (offline mode) they are unable to start because no list exists.
+- [x] BUG2: context menu is not working
+- [x] BUG3: Add item, and add list are not working.
+- [x] BUG4: When is sort by last completed, do not allow drag & drop.
+- [x] BUG5: When all items under a sub-list are marked as done then sub-list should get strike-through and change of colour (similar to that of an item).

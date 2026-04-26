@@ -22,18 +22,18 @@ import {
 } from './firebase.js'
 import { saveData } from './storage.js'
 
-const IDB_KEY_DATA          = 'checklist-cloud-data-v1'
-const IDB_KEY_PENDING       = 'checklist-pending-sync-v1'
+const IDB_KEY_DATA = 'checklist-cloud-data-v1'
+const IDB_KEY_PENDING = 'checklist-pending-sync-v1'
 const IDB_KEY_LAST_SAVED_AT = 'checklist-last-saved-at-v1'
 
-let _uid          = null
-let _onRemoteData = null   // (data) => void  — called when remote wins
-let _unsubscribe  = null   // Firestore real-time listener teardown
-let _pendingFlush = null   // setTimeout handle for debounced flush
+let _uid = null
+let _onRemoteData = null // (data) => void  — called when remote wins
+let _unsubscribe = null // Firestore real-time listener teardown
+let _pendingFlush = null // setTimeout handle for debounced flush
 
 // ── Initialise for a signed-in user ─────────────────────────────────────────
 export async function initSync (uid, onRemoteData) {
-  _uid          = uid
+  _uid = uid
   _onRemoteData = onRemoteData
 
   if (!isFirebaseConfigured()) {
@@ -47,14 +47,14 @@ export async function initSync (uid, onRemoteData) {
   try {
     const remote = await loadFromFirestore(uid)
     if (remote?.data) {
-      const remotTs  = remote.updatedAt?.toMillis?.() || 0
-      const localTs  = (await get(IDB_KEY_LAST_SAVED_AT)) || 0
+      const remotTs = remote.updatedAt?.toMillis?.() || 0
+      const localTs = (await get(IDB_KEY_LAST_SAVED_AT)) || 0
 
       if (remotTs > localTs) {
         // Remote is newer — adopt it
         await set(IDB_KEY_DATA, remote.data)
         await set(IDB_KEY_LAST_SAVED_AT, remotTs)
-        saveData(remote.data)          // write through to localStorage
+        saveData(remote.data) // write through to localStorage
         _onRemoteData?.(remote.data)
       }
     }
@@ -86,8 +86,8 @@ export async function initSync (uid, onRemoteData) {
 // ── Tear down when user signs out ────────────────────────────────────────────
 export function teardownSync () {
   _unsubscribe?.()
-  _unsubscribe  = null
-  _uid          = null
+  _unsubscribe = null
+  _uid = null
   _onRemoteData = null
   clearTimeout(_pendingFlush)
   setSyncStatus('local')
@@ -122,7 +122,7 @@ export async function syncSave (data) {
       await set(IDB_KEY_PENDING, { data, queuedAt: now })
       setSyncStatus('offline')
     }
-  }, 600)  // debounce: coalesce rapid edits into one Firestore write
+  }, 600) // debounce: coalesce rapid edits into one Firestore write
 }
 
 // ── Flush offline queue when connection returns ───────────────────────────────
@@ -141,15 +141,15 @@ async function flushPending () {
 }
 
 // Wire up online/offline events once
-window.addEventListener('online',  () => { flushPending() })
+window.addEventListener('online', () => { flushPending() })
 window.addEventListener('offline', () => { setSyncStatus('offline') })
 
 // ── Sync status indicator ────────────────────────────────────────────────────
 const STATUS_LABELS = {
-  local:   { text: '',               cls: '' },
-  syncing: { text: '⟳ Syncing…',    cls: 'syncing' },
-  synced:  { text: '✓ Saved',       cls: 'synced' },
-  offline: { text: '⚡ Offline',    cls: 'offline' }
+  local: { text: '', cls: '' },
+  syncing: { text: '⟳ Syncing…', cls: 'syncing' },
+  synced: { text: '✓ Saved', cls: 'synced' },
+  offline: { text: '⚡ Offline', cls: 'offline' }
 }
 
 let _clearTimer = null
@@ -158,8 +158,8 @@ function setSyncStatus (key) {
   const el = document.getElementById('sync-status')
   if (!el) return
   const { text, cls } = STATUS_LABELS[key] || STATUS_LABELS.local
-  el.textContent  = text
-  el.className    = 'sync-status ' + cls
+  el.textContent = text
+  el.className = 'sync-status ' + cls
 
   // Auto-clear "Saved" after 2 s
   clearTimeout(_clearTimer)

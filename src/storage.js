@@ -8,7 +8,7 @@
 
 import { sanitizeTree } from './tree.js'
 
-export const KEY          = 'checklist-pwa-data-v1'
+export const KEY = 'checklist-pwa-data-v1'
 export const SETTINGS_KEY = 'checklist-pwa-settings-v1'
 
 // Sync hook — set by app.js after sync module is ready

@@ -43,9 +43,9 @@ export function isFirebaseConfigured () {
 
 export function initFirebase () {
   if (!firebaseConfig) return false
-  app  = initializeApp(firebaseConfig)
+  app = initializeApp(firebaseConfig)
   auth = getAuth(app)
-  db   = getFirestore(app)
+  db = getFirestore(app)
 
   // Enable offline persistence (IndexedDB-backed Firestore cache)
   enableIndexedDbPersistence(db).catch(err => {
