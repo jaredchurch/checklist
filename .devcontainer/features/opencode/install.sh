@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-
 export DEBIAN_FRONTEND=noninteractive
 
 if [ ! -x "$(command -v node)" ] || [ ! -x "$(command -v npm)" ]; then
