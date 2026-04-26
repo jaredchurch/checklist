@@ -24,20 +24,20 @@ export function setShowUpDownActions (value) {
  * @param {function} renderFn - Function to call for re-rendering
  */
 export function registerControls (nodesRef, currentPathRef, renderFn) {
-  const backUp = document.getElementById('back-up')
-  const addItem = document.getElementById('add-item')
-  const addList = document.getElementById('add-list')
+  const globalAddItem = document.getElementById('global-add-item')
+  const globalAddList = document.getElementById('global-add-list')
   const globalMarkAllDone = document.getElementById('global-mark-all-done')
   const globalMarkAllNotDone = document.getElementById('global-mark-all-not-done')
   const globalContext = document.getElementById('global-context')
+  const globalContextLeft = document.getElementById('global-context-left')
 
   // Helper functions to access refs
   const getNodesRaw = () => nodesRef.current
   const getCurrentPath = () => currentPathRef.current
 
   // Add item button - creates a new item and focuses it
-  if (addItem) {
-    addItem.addEventListener('click', () => {
+  if (globalAddItem) {
+    globalAddItem.addEventListener('click', () => {
       let nodesRaw = getNodesRaw()
       if (!nodesRaw) {
         const defaultList = createListNode('My Checklist')
@@ -58,12 +58,13 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
         newInput.focus()
         newInput.select()
       }
+      globalContextLeft?.classList.remove('open')
     })
   }
 
   // Add list button - creates a new sub-list and focuses it
-  if (addList) {
-    addList.addEventListener('click', () => {
+  if (globalAddList) {
+    globalAddList.addEventListener('click', () => {
       const nodesRaw = getNodesRaw()
       const parent = getCurrentParentNode(nodesRaw, getCurrentPath())
       parent.children = parent.children || []
@@ -77,6 +78,7 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
         newInput.focus()
         newInput.select()
       }
+      globalContextLeft?.classList.remove('open')
     })
   }
 
@@ -136,29 +138,22 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
     })
   }
 
-  // Back up button - navigates up one level
-  if (backUp) {
-    backUp.addEventListener('click', () => {
-      const nodesRaw = getNodesRaw()
-      const path = getCurrentPath()
-      if (path.length > 0) {
-        path.pop()
-        const parent = getCurrentParentNode(nodesRaw, path)
-        sortNodeChildren(parent)
-        saveData(nodesRaw)
-        renderFn()
-      }
-    })
-  }
-
   // Global context menu toggle
   const globalContextToggle = document.getElementById('global-context-toggle')
+  const globalContextToggleLeft = document.getElementById('global-context-toggle-left')
   const globalExport = document.getElementById('global-export')
   const globalImport = document.getElementById('global-import')
 
   if (globalContextToggle && globalContext) {
     globalContextToggle.addEventListener('click', () => {
       globalContext.classList.toggle('open')
+      updateMenuLock()
+    })
+  }
+
+  if (globalContextToggleLeft && globalContextLeft) {
+    globalContextToggleLeft.addEventListener('click', () => {
+      globalContextLeft.classList.toggle('open')
       updateMenuLock()
     })
   }
@@ -204,6 +199,8 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
     const isToggle = target.closest('.context-toggle')
     if (!isInsideMenu && !isToggle) {
       document.querySelectorAll('.context-menu.open').forEach(menu => menu.classList.remove('open'))
+      globalContext?.classList.remove('open')
+      globalContextLeft?.classList.remove('open')
       updateMenuLock()
     }
   })

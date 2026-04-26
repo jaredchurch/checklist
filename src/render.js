@@ -92,8 +92,9 @@ export function render (onToggleDone, nodesRef, currentPathRef) {
   const breadcrumb = document.getElementById('breadcrumb')
   if (breadcrumb) {
     breadcrumb.innerHTML = ''
+    const rootTitle = nodesRawRef?.title || 'Home'
     const home = document.createElement('button')
-    home.textContent = 'Home'
+    home.textContent = rootTitle
     home.addEventListener('click', () => {
       pathRef.length = 0
       onToggleDone()
@@ -107,7 +108,8 @@ export function render (onToggleDone, nodesRef, currentPathRef) {
       if (node) pathNodes.push(node)
     })
 
-    pathNodes.forEach((pNode) => {
+    pathNodes.forEach((pNode, idx) => {
+      if (idx === pathNodes.length - 1) return
       const sep = document.createElement('span')
       sep.textContent = ' / '
       breadcrumb.appendChild(sep)
@@ -135,18 +137,6 @@ export function render (onToggleDone, nodesRef, currentPathRef) {
     showUpDownActions,
     onToggleDone
   })
-
-  // Show/hide back button
-  const back = document.getElementById('back-up')
-  if (back) {
-    if (pathRef.length > 0) {
-      back.classList.remove('hidden')
-      back.style.visibility = 'visible'
-    } else {
-      back.classList.add('hidden')
-      back.style.visibility = 'hidden'
-    }
-  }
 
   // Update sort button text
   const sortBtn = document.getElementById('global-sort-completed')
