@@ -3,10 +3,10 @@
  * Registers click handlers for buttons and manages state updates
  */
 
-import { createNode, createListNode, setTreeDone, sortNodeChildren, findParent } from './tree.js'
+import { createNode, createListNode, setTreeDone, sortNodeChildren } from './tree.js'
 import { saveData, saveSettings, getSettings } from './storage.js'
-import { render, updateMenuLock, getCurrentParentNode, setState } from './render.js'
-import { exportData, exportSubListData, setupImportDialog, setupAboutDialog } from './dialogs.js'
+import { updateMenuLock, getCurrentParentNode, setState } from './render.js'
+import { exportData, exportSubListData, setupImportDialog, setupAboutDialog, showRenameDialog } from './dialogs.js'
 
 let showUpDownActions = getSettings().showUpDownActions || false
 

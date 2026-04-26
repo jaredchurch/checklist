@@ -3,7 +3,7 @@
  * Handles DOM rendering, state management, and UI updates
  */
 
-import { createNode, createListNode, findParent, findNodeById, getDescendantItemSummary, sortNodeChildren } from './tree.js'
+import { findParent, findNodeById, getDescendantItemSummary, sortNodeChildren } from './tree.js'
 import { getCurrentNodes } from './sorting.js'
 import { saveData, saveSettings, getSettings } from './storage.js'
 import { showRenameDialog } from './dialogs.js'

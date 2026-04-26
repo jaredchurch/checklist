@@ -16,9 +16,6 @@ import {
   isFirebaseConfigured
 } from './firebase.js'
 
-let _onSignedIn = null // (user) => void
-let _onSignedOut = null // ()     => void
-
 // ── Overlay elements ─────────────────────────────────────────────────────────
 function overlay () { return document.getElementById('auth-overlay') }
 function authForm () { return document.getElementById('auth-form') }
@@ -27,16 +24,12 @@ function authEmail () { return document.getElementById('auth-email') }
 function authPwd () { return document.getElementById('auth-password') }
 function authSubmit () { return document.getElementById('auth-submit') }
 
-// ── Public API ────────────────────────────────────────────────────────────────
 /**
  * Initialise auth module.
  * If Firebase is not configured the overlay is never shown and the app
  * runs in local-only mode (same as before).
  */
 export function initAuth ({ onSignedIn, onSignedOut }) {
-  _onSignedIn = onSignedIn
-  _onSignedOut = onSignedOut
-
   if (!isFirebaseConfigured()) {
     // No Firebase — run in local-only mode, hide any auth UI
     document.getElementById('auth-overlay')?.remove()

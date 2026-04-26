@@ -4,5 +4,5 @@
 - [] 4: review firebase design for security. each user should have to connect to their own firebase - credentials for it should be stored in local storage and handled as secure elements.
 - [] 5: segregate CSS, javascript and html - they should not be in the same files. Add notes on this to agents.md
 - [] 6: add notes to agents.md that headers and comments (explain why of code) should always be written in code.
-- [] 7: resolve linting errors
+- [x] 7: resolve linting errors
 - [] 8: review code & commit history and expand requirements based on what is there now.

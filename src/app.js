@@ -121,7 +121,7 @@ async function fetchCommitInfo () {
     }
 
     if (!commit) throw new Error('Commit info not found')
-    
+
     const hash = commit.sha.slice(0, 7)
     const date = new Date(commit.commit.committer.date).toLocaleString()
     el.textContent = `Commit ${hash} @ ${date} (${branch})`
