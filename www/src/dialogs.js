@@ -259,39 +259,56 @@ export function setupAboutDialog () {
 }
 
 /**
- * Fetch latest commit info from GitHub
+ * Fetch latest commit info from GitHub with caching to avoid rate limits
  */
 async function fetchCommitInfo () {
   const el = document.getElementById('about-commit-info') || document.getElementById('commit-info')
   if (!el) return
 
+  const CACHE_KEY = 'checklist-commit-cache'
+  const CACHE_TTL = 3600000 // 1 hour
+  const now = Date.now()
+
+  // Try to load from cache
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
+    if (cached && (now - cached.timestamp < CACHE_TTL)) {
+      if (cached.rateLimited && (now - cached.timestamp < CACHE_TTL)) {
+        el.textContent = 'Commit info unavailable'
+        return
+      }
+      if (cached.data) {
+        el.textContent = cached.data
+        return
+      }
+    }
+  } catch (e) {}
+
   const repoOwner = 'jaredchurch'
   const repoName = 'checklist'
 
   try {
-    let branch = 'main'
+    const branch = 'main'
+    const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`)
 
-    const pagesResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/pages`)
-    if (pagesResp.ok) {
-      const pagesData = await pagesResp.json()
-      branch = pagesData.source?.branch || branch
-    } else {
-      const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`)
-      if (repoResp.ok) {
-        const repoData = await repoResp.json()
-        branch = repoData.default_branch || branch
-      }
+    if (commitResp.status === 403) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: now, rateLimited: true }))
+      throw new Error('Rate limited')
     }
 
-    const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`)
     if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`)
     const commit = await commitResp.json()
 
     const hash = commit.sha.slice(0, 7)
     const date = new Date(commit.commit.committer.date).toLocaleString()
-    el.textContent = `Commit ${hash} @ ${date} (${branch})`
+    const infoText = `Commit ${hash} @ ${date} (${branch})`
+
+    el.textContent = infoText
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: now, data: infoText }))
   } catch (err) {
-    console.warn('Failed to load commit info', err)
+    if (err.message !== 'Rate limited') {
+      console.warn('Failed to load commit info', err)
+    }
     el.textContent = 'Commit info unavailable'
   }
 }

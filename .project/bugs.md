@@ -4,3 +4,4 @@
 - [x] BUG4: When is sort by last completed, do not allow drag & drop.
 - [x] BUG5: When all items under a sub-list are marked as done then sub-list should get strike-through and change of colour (similar to that of an item).
 - [] BUG6: Ensure expanded context menus can always be visible - I found the bottom item on the list if I raised the context menu it was hidden behind breadcrumbs.
+- [] BUG7: Error message when opening about dialog.

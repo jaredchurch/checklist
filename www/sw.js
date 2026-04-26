@@ -1,12 +1,4 @@
-/**
- * Service Worker — Checklist PWA
- *
- * Strategy: Cache-first for app shell assets, network-first for API calls.
- * Offline fallback to index.html for navigation requests.
- */
-
-const CACHE_NAME = 'checklist-pwa-v3'
-
+const CACHE_NAME = 'checklist-pwa-v1'
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -24,9 +16,11 @@ const PRECACHE_ASSETS = [
   '/src/sorting.js',
   '/src/utils.js',
   '/src/style.css',
+  '/src/firebase-config.js',
   '/icons/favicon-180.png',
   '/favicon.ico'
 ]
+
 // ── Install: pre-cache app shell ─────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -41,64 +35,46 @@ self.addEventListener('install', event => {
       )
     })
   )
-  self.skipWaiting()
 })
 
-// ── Activate: prune old caches ───────────────────────────────────────────────
+// ── Activate: clean up old caches ─────────────────────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       )
-    )
+    })
   )
-  self.clients.claim()
 })
 
-// ── Fetch ────────────────────────────────────────────────────────────────────
+// ── Fetch: network-first with cache fallback ──────────────────────────────────
 self.addEventListener('fetch', event => {
-  const { request } = event
+  // Only handle GET requests for our assets
+  if (event.request.method !== 'GET') return
 
-  // Only handle GET requests
-  if (request.method !== 'GET') return
-
-  const url = new URL(request.url)
-
-  // Skip Firebase / Google APIs — let them go straight to network
-  if (
-    url.hostname.includes('firebase') ||
-    url.hostname.includes('google') ||
-    url.hostname.includes('gstatic') ||
-    url.hostname.includes('googleapis') ||
-    url.hostname.includes('firestore')
-  ) return
-
-  // Navigation requests: network-first, fall back to cached index.html
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then(res => {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then(c => c.put(request, clone))
-          return res
-        })
-        .catch(() => caches.match('/index.html'))
-    )
-    return
-  }
-
-  // App shell assets: cache-first
   event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached
-      return fetch(request).then(res => {
-        if (res && res.status === 200 && res.type === 'basic') {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then(c => c.put(request, clone))
+    fetch(event.request)
+      .then(networkRes => {
+        // Only cache successful responses for our own origin
+        const isInternal = event.request.url.startsWith(self.location.origin)
+        if (networkRes.ok && isInternal) {
+          const cacheCopy = networkRes.clone()
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, cacheCopy))
         }
-        return res
-      }).catch(() => caches.match('/index.html'))
-    })
+        return networkRes
+      })
+      .catch(() => {
+        // Fallback to cache if network fails
+        return caches.match(event.request).then(cachedRes => {
+          if (cachedRes) return cachedRes
+
+          // If it's a navigation request and we're offline, return index.html
+          if (event.request.mode === 'navigate') {
+            return caches.match('/')
+          }
+        })
+      })
   )
 })
