@@ -10,7 +10,7 @@
  */
 
 import { createListNode } from './tree.js'
-import { getData, registerSyncHook } from './storage.js'
+import { getData, registerSyncHook, saveData } from './storage.js'
 import { registerControls } from './controls.js'
 import { render, initState } from './render.js'
 import { initFirebase, isFirebaseConfigured } from './firebase.js'
@@ -28,7 +28,7 @@ function init () {
   registerSyncHook(syncSave)
 
   // Shared mutable refs — all modules read/write through these
-  const nodesRef       = { current: null }
+  const nodesRef = { current: null }
   const currentPathRef = { current: [] }
 
   // Core render closure
@@ -39,7 +39,7 @@ function init () {
   // ── Helper: boot the app with a given dataset ──────────────────────────────
   function bootApp (data) {
     const defaultList = createListNode('My Checklist')
-    nodesRef.current       = data || defaultList
+    nodesRef.current = data || defaultList
     currentPathRef.current = []
     initState(nodesRef.current)
     if (!data) saveData(nodesRef.current)
@@ -50,7 +50,7 @@ function init () {
   async function onSignedIn (user) {
     // Pull remote data; sync engine will call saveData/onRemoteData if newer
     await initSync(user.uid, remoteData => {
-      nodesRef.current       = remoteData
+      nodesRef.current = remoteData
       currentPathRef.current = []
       initState(remoteData)
       renderFn()
@@ -103,7 +103,7 @@ function init () {
 async function fetchCommitInfo () {
   const el = document.getElementById('about-commit-info')
   if (!el) return
-  const owner = 'jaredchurch', repo = 'checklist'
+  const owner = 'jaredchurch'; const repo = 'checklist'
   try {
     let branch = 'main'
     const pagesResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/pages`)

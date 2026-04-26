@@ -36,7 +36,7 @@ self.addEventListener('install', event => {
         PRECACHE_ASSETS.map(url =>
           fetch(url).then(res => {
             if (res.ok) cache.put(url, res)
-          }).catch(() => {/* ignore missing assets during install */})
+          }).catch(() => { /* ignore missing assets during install */ })
         )
       )
     })

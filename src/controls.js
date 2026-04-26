@@ -13,7 +13,7 @@ let showUpDownActions = getSettings().showUpDownActions || false
 /**
  * Set the showUpDownActions state (for backward compatibility)
  */
-export function setShowUpDownActions(value) {
+export function setShowUpDownActions (value) {
   showUpDownActions = value
 }
 
@@ -23,7 +23,7 @@ export function setShowUpDownActions(value) {
  * @param {object} currentPathRef - Reference to the current path array
  * @param {function} renderFn - Function to call for re-rendering
  */
-export function registerControls(nodesRef, currentPathRef, renderFn) {
+export function registerControls (nodesRef, currentPathRef, renderFn) {
   const backUp = document.getElementById('back-up')
   const addItem = document.getElementById('add-item')
   const addList = document.getElementById('add-list')

@@ -15,7 +15,7 @@ let showUpDownActions = false
 /**
  * Set module-level state (for backward compatibility)
  */
-export function setState(state) {
+export function setState (state) {
   nodesRaw = state.nodesRaw
   currentPath = state.currentPath
   showUpDownActions = state.showUpDownActions
@@ -24,14 +24,14 @@ export function setState(state) {
 /**
  * Get module-level state (for backward compatibility)
  */
-export function getState() {
+export function getState () {
   return { nodesRaw, currentPath, showUpDownActions }
 }
 
 /**
  * Initialize state with initial data
  */
-export function initState(initialNodesRaw) {
+export function initState (initialNodesRaw) {
   nodesRaw = initialNodesRaw
   currentPath = []
   const settings = getSettings()
@@ -41,7 +41,7 @@ export function initState(initialNodesRaw) {
 /**
  * Get the current parent node based on the current path
  */
-export function getCurrentParentNode(nodes = nodesRaw, path = currentPath) {
+export function getCurrentParentNode (nodes = nodesRaw, path = currentPath) {
   if (!path || path.length === 0) return nodes
   const node = findNodeById(nodes, path[path.length - 1])
   return node || nodes
@@ -50,7 +50,7 @@ export function getCurrentParentNode(nodes = nodesRaw, path = currentPath) {
 /**
  * Focus and select a label input
  */
-export function focusLabelInput(input) {
+export function focusLabelInput (input) {
   if (!input) return
   input.focus()
   input.select()
@@ -59,7 +59,7 @@ export function focusLabelInput(input) {
 /**
  * Toggle body class to lock interactions when menu is open
  */
-export function updateMenuLock() {
+export function updateMenuLock () {
   const anyOpen = document.querySelector('.context-menu.open')
   document.body.classList.toggle('menu-open', !!anyOpen)
 }
@@ -67,7 +67,7 @@ export function updateMenuLock() {
 /**
  * Main render function - updates the entire checklist UI
  */
-export function render(onToggleDone, nodesRef, currentPathRef) {
+export function render (onToggleDone, nodesRef, currentPathRef) {
   const container = document.getElementById('tree-content')
   if (!container) return
 
@@ -92,7 +92,7 @@ export function render(onToggleDone, nodesRef, currentPathRef) {
     })
     breadcrumb.appendChild(home)
 
-    let pathNodes = []
+    const pathNodes = []
     let node = nodesRawRef
     pathRef.forEach((id) => {
       node = findNodeById(node, id)
@@ -120,14 +120,14 @@ export function render(onToggleDone, nodesRef, currentPathRef) {
   const parent = getParentNode()
   const nodeArray = Array.isArray(parent.children) ? parent.children : []
   const sortedNodes = getCurrentNodes(nodeArray, parent)
-  
-  renderTree(sortedNodes, container, { 
-    nodesRaw: nodesRawRef, 
+
+  renderTree(sortedNodes, container, {
+    nodesRaw: nodesRawRef,
     currentPath: pathRef,
     showUpDownActions,
     onToggleDone
   })
-  
+
   // Show/hide back button
   const back = document.getElementById('back-up')
   if (back) {
@@ -146,7 +146,7 @@ export function render(onToggleDone, nodesRef, currentPathRef) {
     const isCompleted = parent.sortMode === 'completed'
     sortBtn.textContent = isCompleted ? 'Sorting by Last Completed ✓' : 'Sort by Last Completed'
   }
-  
+
   // Update show/hide sorting button
   const toggleButton = document.getElementById('global-toggle-up-down')
   if (toggleButton) {
@@ -164,27 +164,27 @@ export function render(onToggleDone, nodesRef, currentPathRef) {
  * Render a tree of nodes into a container
  * Creates DOM elements for each node with appropriate controls
  */
-export function renderTree(nodes, container, options = {}) {
-  const { 
-    nodesRaw: optNodesRaw, 
-    currentPath: optCurrentPath = [], 
+export function renderTree (nodes, container, options = {}) {
+  const {
+    nodesRaw: optNodesRaw,
+    currentPath: optCurrentPath = [],
     showUpDownActions: optShowUpDown = false,
     onToggleDone = () => {}
   } = options
-  
+
   const nodesRawRef = optNodesRaw || nodesRaw
   const currentPathRef = optCurrentPath || currentPath || []
   const showUpDownRef = optShowUpDown || showUpDownActions
-  
+
   const getParentNode = () => {
     if (currentPathRef.length === 0) return nodesRawRef
     const node = findNodeById(nodesRawRef, currentPathRef[currentPathRef.length - 1])
     return node || nodesRawRef
   }
-  
+
   container.innerHTML = ''
   const ul = document.createElement('ul')
-  
+
   nodes.forEach((node, index) => {
     if (node.type === 'item') {
       node.children = []
@@ -255,7 +255,7 @@ export function renderTree(nodes, container, options = {}) {
     titleInput.addEventListener('blur', () => {
       node.isNew = false
     })
-    
+
     // Keyboard handling for Enter (create new item) and Escape (delete new item)
     titleInput.addEventListener('keydown', (evt) => {
       if (evt.key === 'Enter') {
@@ -389,17 +389,17 @@ export function renderTree(nodes, container, options = {}) {
     // Configure button states based on sort mode
     const parent = getParentNode()
     const isSortByCompleted = parent.sortMode === 'completed'
-    
+
     upButton.disabled = index === 0
     downButton.disabled = index === nodes.length - 1
 
     // Build element array
     const elements = [actionControl, titleInput]
-    
+
     if (showUpDownRef && !isSortByCompleted) {
       elements.push(upButton, downButton)
     }
-    
+
     elements.push(contextToggle)
 
     // Add summary for lists
@@ -417,7 +417,7 @@ export function renderTree(nodes, container, options = {}) {
     li.appendChild(wrapper)
     ul.appendChild(li)
   })
-  
+
   container.appendChild(ul)
 }
 

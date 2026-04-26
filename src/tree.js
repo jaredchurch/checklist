@@ -13,7 +13,7 @@ export { collectIdsUtil as collectIds }
  * @param {string} title - The title of the new item
  * @returns {object} A new item node
  */
-export function createNode(title = 'New item') {
+export function createNode (title = 'New item') {
   return {
     id: uid(),
     type: 'item',
@@ -30,7 +30,7 @@ export function createNode(title = 'New item') {
  * @param {string} title - The title of the new list
  * @returns {object} A new list node
  */
-export function createListNode(title = 'New list') {
+export function createListNode (title = 'New list') {
   return {
     id: uid(),
     type: 'list',
@@ -45,7 +45,7 @@ export function createListNode(title = 'New list') {
  * Sanitize and validate a tree structure
  * Regenerates duplicate/missing IDs and ensures valid structure
  */
-export function sanitizeTree(node, existingIds = new Set()) {
+export function sanitizeTree (node, existingIds = new Set()) {
   if (!node || typeof node !== 'object') {
     return createListNode('Root')
   }
@@ -85,7 +85,7 @@ export function sanitizeTree(node, existingIds = new Set()) {
  * @param {string} id - The ID to find
  * @returns {object|null} The found node or null
  */
-export function findNodeById(root, id) {
+export function findNodeById (root, id) {
   if (root.id === id) return root
   for (const n of root.children) {
     const found = findNodeById(n, id)
@@ -101,7 +101,7 @@ export function findNodeById(root, id) {
  * @param {object} parent - The current parent (used internally for recursion)
  * @returns {object|null} The parent node or null
  */
-export function findParent(root, childId, parent = null) {
+export function findParent (root, childId, parent = null) {
   if (root.id === childId) return parent
   for (const node of root.children) {
     const found = findParent(node, childId, root)
@@ -117,7 +117,7 @@ export function findParent(root, childId, parent = null) {
  * @param {function} callback - Function to call with the found node
  * @returns {boolean} Whether the node was found and updated
  */
-export function updateNode(root, id, callback) {
+export function updateNode (root, id, callback) {
   if (root.id === id) {
     callback(root)
     return true
@@ -134,7 +134,7 @@ export function updateNode(root, id, callback) {
  * @param {boolean} done - The done status to set
  * @param {boolean} includeDescendants - Whether to recursively update list children
  */
-export function setTreeDone(nodes, done, includeDescendants = true) {
+export function setTreeDone (nodes, done, includeDescendants = true) {
   for (const n of nodes) {
     if (n.type === 'item') {
       n.done = done
@@ -151,11 +151,11 @@ export function setTreeDone(nodes, done, includeDescendants = true) {
  * @param {object} node - A list node
  * @returns {{done: number, total: number}} Counts of done and total items
  */
-export function getDescendantItemSummary(node) {
+export function getDescendantItemSummary (node) {
   let done = 0
   let total = 0
 
-  function recurse(n) {
+  function recurse (n) {
     for (const c of n.children || []) {
       if (c.type === 'item') {
         total += 1
@@ -179,7 +179,7 @@ export function getDescendantItemSummary(node) {
  * @param {object} node - The node to check
  * @returns {boolean} Whether the node is complete
  */
-export function isNodeComplete(node) {
+export function isNodeComplete (node) {
   if (node.type === 'item') {
     return node.done === true
   }
@@ -197,7 +197,7 @@ export function isNodeComplete(node) {
  * Incomplete items/lists appear before completed ones
  * @param {object} node - A list node whose children to sort
  */
-export function sortNodeChildren(node) {
+export function sortNodeChildren (node) {
   if (!node || node.type !== 'list' || !Array.isArray(node.children)) return
 
   node.children = node.children
@@ -229,7 +229,7 @@ export function sortNodeChildren(node) {
  * @param {number} level - Depth level to target (0 = top level)
  * @param {boolean} done - The done status to set
  */
-export function setLevelDone(nodes, level, done) {
+export function setLevelDone (nodes, level, done) {
   if (level === 0) {
     for (const n of nodes) {
       if (n.type === 'item') {
