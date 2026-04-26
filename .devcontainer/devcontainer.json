@@ -8,12 +8,5 @@
 	"containerEnv": {
 		"LANG": "en_NZ.UTF-8",
 		"LC_ALL": "en_NZ.UTF-8"
-	},
-	"customizations": {
-		"vscode": {
-			"settings": {
-				"terminal.integrated.defaultProfile.linux": "bash"
-			}
-		}
 	}
 }
