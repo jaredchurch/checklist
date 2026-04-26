@@ -1,0 +1,20 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/javascript-node",
+	"features": {
+		"ghcr.io/devcontainers-extra/features/npm-package:1": {
+			"package": "opencode"
+		}
+	},
+	"postCreateCommand": "sudo sed -i '/en_NZ.UTF-8/s/^# //' /etc/locale.gen && sudo locale-gen en_NZ.UTF-8",
+	"containerEnv": {
+		"LANG": "en_NZ.UTF-8",
+		"LC_ALL": "en_NZ.UTF-8"
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			}
+		}
+	}
+}
