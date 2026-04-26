@@ -183,6 +183,8 @@ export function renderTree (nodes, container, options = {}) {
 
   container.innerHTML = ''
   const ul = document.createElement('ul')
+  ul.style.listStyle = 'none'
+  ul.style.paddingLeft = '0'
 
   nodes.forEach((node, index) => {
     if (node.type === 'item') {
