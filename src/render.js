@@ -190,7 +190,11 @@ export function renderTree (nodes, container, options = {}) {
     }
 
     const li = document.createElement('li')
+    const card = document.createElement('div')
+    card.className = 'item-card'
+    card.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.5rem;position:relative;width:100%;'
     const wrapper = document.createElement('div')
+    wrapper.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex:1;width:100%;'
     const isListDone = node.type === 'list' && getDescendantItemSummary(node).total > 0 && getDescendantItemSummary(node).done === getDescendantItemSummary(node).total
     wrapper.className = `tree-item${(node.type === 'item' && node.done) || isListDone ? ' done' : ''}`
     wrapper.setAttribute('data-node-id', node.id)
@@ -368,25 +372,32 @@ export function renderTree (nodes, container, options = {}) {
     // Build element array
     const elements = [actionControl, titleLabel]
 
-    if (showUpDownRef && !isSortByCompleted) {
-      elements.push(upButton, downButton)
-    }
+    // Container for right-aligned items
+    const rightContainer = document.createElement('div')
+    rightContainer.style.cssText = 'display:flex;align-items:center;gap:0.25rem;margin-left:auto;'
 
-    elements.push(contextToggle)
-
-    // Add summary for lists
+    // Add summary for lists (before arrows when shown)
     if (node.type === 'list') {
       const summary = getDescendantItemSummary(node)
       const summaryEl = document.createElement('span')
       summaryEl.className = 'summary'
       summaryEl.textContent = `(${summary.done}/${summary.total})`
-      elements.splice(2, 0, summaryEl)
+      rightContainer.appendChild(summaryEl)
     }
 
-    wrapper.append(...elements)
-    wrapper.appendChild(contextMenu)
+    if (showUpDownRef && !isSortByCompleted) {
+      rightContainer.appendChild(upButton)
+      rightContainer.appendChild(downButton)
+    }
 
-    li.appendChild(wrapper)
+    rightContainer.appendChild(contextToggle)
+    elements.push(rightContainer)
+
+    wrapper.append(...elements)
+
+    card.appendChild(wrapper)
+    card.appendChild(contextMenu)
+    li.appendChild(card)
     ul.appendChild(li)
   })
 

@@ -111,6 +111,7 @@ input[type="file"]:hover {
   border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   padding: .75rem;
+  overflow: hidden;
 }
 .tree ul {
   list-style: none;
@@ -122,7 +123,6 @@ input[type="file"]:hover {
   gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
-
 .tree-item input[type="checkbox"] {
   width: 28px;
   height: 28px;
@@ -140,9 +140,6 @@ input[type="file"]:hover {
 .tree-item.done > .label {
   text-decoration: line-through;
   opacity: .6;
-}
-.tree-item {
-  position: relative;
 }
 .breadcrumb {
   font-size: 0.95rem;
