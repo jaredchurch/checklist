@@ -1,0 +1,14 @@
+{
+  "id": "npm-global",
+  "version": "1.0.0",
+  "name": "Global npm packages",
+  "description": "Install multiple npm packages globally",
+  "options": {
+    "packages": {
+      "type": "string",
+      "description": "Space-separated list of packages to install globally (e.g. 'opencode gh')",
+      "default": "",
+      "examples": ["opencode gh"]
+    }
+  }
+}
