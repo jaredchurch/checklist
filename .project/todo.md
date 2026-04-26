@@ -1,0 +1,3 @@
+- [] 1: remove the sorting arrows and option to turn those on/off in the global context menu.
+- [] 2: create a www folder, and move all objects that get served into that sub-folder
+- [] 3: change the favicon-180.png - put it into a favicon.ico object (to get rid of favicon.ico error in console)
