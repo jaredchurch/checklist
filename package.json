@@ -9,7 +9,7 @@
     "serve": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint www --ext .js",
     "start": "npm run dev"
   },
   "dependencies": {
