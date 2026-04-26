@@ -2,9 +2,9 @@
 	"image": "mcr.microsoft.com/devcontainers/javascript-node",
 	"features": {
 		"./features/opencode": {},
+		"./features/locale-nz": {},
 		"./features/github-cli": {}
 	},
-	"postCreateCommand": "sudo sed -i '/en_NZ.UTF-8/s/^# //' /etc/locale.gen && sudo locale-gen en_NZ.UTF-8",
 	"containerEnv": {
 		"LANG": "en_NZ.UTF-8",
 		"LC_ALL": "en_NZ.UTF-8"
