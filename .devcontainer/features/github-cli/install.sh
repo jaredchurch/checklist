@@ -12,8 +12,8 @@ export DEBIAN_FRONTEND=noninteractive
 	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
 	&& sudo mkdir -p -m 755 /etc/apt/sources.list.d \
 	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-	&& sudo apt-get update \
-	&& sudo apt-get install gh -y
+	&& sudo DEBIAN_FRONTEND=noninteractive apt-get update \
+	&& sudo DEBIAN_FRONTEND=noninteractive apt-get install gh -y
 echo "✅ Install GitHub CLI Done"
 
 ### End of File
