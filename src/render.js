@@ -80,6 +80,14 @@ export function render (onToggleDone, nodesRef, currentPathRef) {
     return node || nodesRawRef
   }
 
+  // Update page title to current list name
+  const titleEl = document.getElementById('list-title')
+  if (titleEl) {
+    const parent = getParentNode()
+    titleEl.textContent = parent?.title || 'Checklist'
+    document.title = parent?.title || 'Checklist'
+  }
+
   // Render breadcrumb navigation
   const breadcrumb = document.getElementById('breadcrumb')
   if (breadcrumb) {

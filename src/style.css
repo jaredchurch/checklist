@@ -17,6 +17,41 @@ body {
 header {
   text-align: center;
   margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  min-height: 3rem;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+header .sync-status {
+  position: absolute;
+  left: 0;
+  top: .25rem;
+}
+header .auth-user-bar {
+  position: absolute;
+  left: 0;
+  top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-context-menu {
+  position: absolute;
+  right: 0;
+  top: .25rem;
+}
+
+.header-context-menu .context-menu {
+  right: 0;
+}
+
+#sync-status.syncing {
+  order: -1;
 }
 .controls {
   margin-bottom: 1rem;
