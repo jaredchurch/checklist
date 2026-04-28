@@ -10,7 +10,7 @@
     "serve": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "lint": "eslint www --ext .js",
+    "lint": "eslint www --ext .js --ignore-pattern www/dist",
     "start": "npm run dev"
   },
   "dependencies": {

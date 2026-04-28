@@ -7,8 +7,8 @@
 - `npm run lint` - ESLint (`.js` files in `www/`)
 
 ## Architecture
-- Single-page Vite app; entry point: `src/main.js`
-- State logic in `src/app.js`, UI in `index.html`
+- Single-page Vite app; entry point: `www/src/main.js`
+- State logic in `www/src/app.js`, UI in `index.html`
 - Tests: `src/__tests__/**/*.test.js` (jsdom environment)
 - Persistence: `idb-keyval` (IndexedDB wrapper) + service worker (`sw.js`)
 - PWA manifest: `manifest.webmanifest`
