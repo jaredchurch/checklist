@@ -328,6 +328,24 @@ export function renderTree (nodes, container, options = {}) {
       const menu = card.querySelector('.item-context-menu')
       if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
+        
+        // Reset styles for measurement
+        menu.style.top = '100%'
+        menu.style.bottom = 'auto'
+        menu.style.marginTop = '0.25rem'
+        menu.style.marginBottom = '0'
+
+        const rect = menu.getBoundingClientRect()
+        const breadcrumbBar = document.getElementById('breadcrumb-bar')
+        const buffer = 10
+        const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+
+        if (rect.bottom > bottomLimit - buffer) {
+          menu.style.top = 'auto'
+          menu.style.bottom = '100%'
+          menu.style.marginTop = '0'
+          menu.style.marginBottom = '0.25rem'
+        }
         updateMenuLock()
       } else {
         updateMenuLock()
@@ -449,6 +467,24 @@ export function renderTree (nodes, container, options = {}) {
       const menu = card.querySelector('.item-context-menu')
       if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
+        
+        // Reset styles for measurement
+        menu.style.top = '100%'
+        menu.style.bottom = 'auto'
+        menu.style.marginTop = '0.25rem'
+        menu.style.marginBottom = '0'
+
+        const rect = menu.getBoundingClientRect()
+        const breadcrumbBar = document.getElementById('breadcrumb-bar')
+        const buffer = 10
+        const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+
+        if (rect.bottom > bottomLimit - buffer) {
+          menu.style.top = 'auto'
+          menu.style.bottom = '100%'
+          menu.style.marginTop = '0'
+          menu.style.marginBottom = '0.25rem'
+        }
         updateMenuLock()
       } else {
         updateMenuLock()

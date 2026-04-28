@@ -144,14 +144,45 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
 
   if (globalContextToggle && globalContext) {
     globalContextToggle.addEventListener('click', () => {
+      const isOpen = globalContext.classList.contains('open')
       globalContext.classList.toggle('open')
+      if (!isOpen) {
+        // Reset styles for measurement
+        globalContext.style.top = '100%'
+        globalContext.style.bottom = 'auto'
+        globalContext.style.marginTop = '0.25rem'
+        globalContext.style.marginBottom = '0'
+
+        const rect = globalContext.getBoundingClientRect()
+        const breadcrumbBar = document.getElementById('breadcrumb-bar')
+        const buffer = 10
+        const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+
+        if (rect.bottom > bottomLimit - buffer) {
+          globalContext.style.top = 'auto'
+          globalContext.style.bottom = '100%'
+          globalContext.style.marginTop = '0'
+          globalContext.style.marginBottom = '0.25rem'
+        }
+      }
       updateMenuLock()
     })
   }
 
   if (globalContextToggleLeft && globalContextLeft) {
     globalContextToggleLeft.addEventListener('click', () => {
+      const isOpen = globalContextLeft.classList.contains('open')
       globalContextLeft.classList.toggle('open')
+      if (!isOpen) {
+        const rect = globalContextLeft.getBoundingClientRect()
+        if (rect.bottom > window.innerHeight) {
+          globalContextLeft.style.top = 'auto'
+          globalContextLeft.style.bottom = '110%'
+        } else {
+          globalContextLeft.style.top = '110%'
+          globalContextLeft.style.bottom = 'auto'
+        }
+      }
       updateMenuLock()
     })
   }
