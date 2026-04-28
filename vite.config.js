@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  root: '.',
+  root: 'www',
   server: {
     host: '0.0.0.0'
   },

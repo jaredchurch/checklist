@@ -192,6 +192,20 @@ export function renderTree (nodes, container, options = {}) {
   const parentNode = getParentNode()
   const isSortByCompleted = parentNode.sortMode === 'completed'
 
+  const handleDrop = () => {
+    if (isSortByCompleted) return
+    if (!draggedNodeId) return
+    const newOrder = Array.from(ul.children).map((li) => li.querySelector('.item-card').getAttribute('data-node-id'))
+    const parent = getParentNode()
+    if (!parent || !parent.children) return
+    const sortedNodes = newOrder.map((id) => parent.children.find((c) => c.id === id)).filter(Boolean)
+    parent.children = sortedNodes
+    saveData(nodesRawRef)
+    onToggleDone()
+    draggedLi = null
+    draggedNodeId = null
+  }
+
   ul.addEventListener('dragover', (evt) => {
     if (isSortByCompleted) return
     evt.preventDefault()
@@ -204,18 +218,8 @@ export function renderTree (nodes, container, options = {}) {
   })
 
   ul.addEventListener('drop', (evt) => {
-    if (isSortByCompleted) return
     evt.preventDefault()
-    if (!draggedNodeId) return
-    const newOrder = Array.from(ul.children).map((li) => li.querySelector('.item-card').getAttribute('data-node-id'))
-    const parent = getParentNode()
-    if (!parent || !parent.children) return
-    const sortedNodes = newOrder.map((id) => parent.children.find((c) => c.id === id)).filter(Boolean)
-    parent.children = sortedNodes
-    saveData(nodesRawRef)
-    onToggleDone()
-    draggedLi = null
-    draggedNodeId = null
+    handleDrop()
   })
 
   function getDragAfterElement (container, y) {
@@ -243,6 +247,7 @@ export function renderTree (nodes, container, options = {}) {
     card.style.cssText = `display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;margin-bottom:0.5rem;position:relative;width:100%;cursor:${isSortByCompleted ? 'default' : 'grab'};`
     card.setAttribute('data-node-id', node.id)
 
+    // Desktop drag events
     card.addEventListener('dragstart', () => {
       draggedLi = li
       draggedNodeId = node.id
@@ -251,6 +256,62 @@ export function renderTree (nodes, container, options = {}) {
 
     card.addEventListener('dragend', () => {
       card.classList.remove('dragging')
+    })
+
+    // Touch events for iOS (touch and hold to resort)
+    let touchTimeout
+    let isTouchDragging = false
+    let startY = 0
+
+    card.addEventListener('touchstart', (e) => {
+      if (isSortByCompleted) return
+      startY = e.touches[0].clientY
+      if (touchTimeout) clearTimeout(touchTimeout)
+
+      touchTimeout = setTimeout(() => {
+        isTouchDragging = true
+        draggedLi = li
+        draggedNodeId = node.id
+        card.classList.add('dragging')
+        if (window.navigator.vibrate) window.navigator.vibrate(50)
+      }, 600) // 600ms for long press
+    }, { passive: true })
+
+    card.addEventListener('touchmove', (e) => {
+      const currentY = e.touches[0].clientY
+      if (isTouchDragging) {
+        if (e.cancelable) e.preventDefault()
+        const afterCard = getDragAfterElement(ul, currentY)
+        if (afterCard == null) {
+          ul.appendChild(draggedLi)
+        } else {
+          ul.insertBefore(draggedLi, afterCard.parentNode)
+        }
+      } else {
+        // If they move too much before the long press, cancel it
+        if (Math.abs(currentY - startY) > 10) {
+          if (touchTimeout) clearTimeout(touchTimeout)
+        }
+      }
+    }, { passive: false })
+
+    card.addEventListener('touchend', () => {
+      if (touchTimeout) clearTimeout(touchTimeout)
+      if (isTouchDragging) {
+        isTouchDragging = false
+        card.classList.remove('dragging')
+        handleDrop()
+      }
+    })
+
+    card.addEventListener('touchcancel', () => {
+      if (touchTimeout) clearTimeout(touchTimeout)
+      if (isTouchDragging) {
+        isTouchDragging = false
+        card.classList.remove('dragging')
+        draggedLi = null
+        draggedNodeId = null
+      }
     })
     const wrapper = document.createElement('div')
     wrapper.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex:1;width:100%;'

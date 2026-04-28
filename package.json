@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "update-commit": "node scripts/update-commit-info.js",
+    "dev": "npm run update-commit && vite",
+    "build": "npm run update-commit && vite build",
     "serve": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint www --ext .js",
     "start": "npm run dev"
   },
   "dependencies": {

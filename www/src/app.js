@@ -95,39 +95,8 @@ function init () {
       .catch(err => console.error('SW registration failed', err))
   }
 
-  // ── Commit info in About dialog ───────────────────────────────────────────
-  fetchCommitInfo()
-}
-
-// ── Commit info ──────────────────────────────────────────────────────────────
-async function fetchCommitInfo () {
-  const el = document.getElementById('about-commit-info')
-  if (!el) return
-  const owner = 'jaredchurch'; const repo = 'checklist'
-  try {
-    let commit = null
-    let branch = 'main'
-    // Try main branch first
-    let commitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/main`)
-    if (commitResp.ok) {
-      commit = await commitResp.json()
-    } else {
-      // Fallback to master
-      branch = 'master'
-      commitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/master`)
-      if (commitResp.ok) {
-        commit = await commitResp.json()
-      }
-    }
-
-    if (!commit) throw new Error('Commit info not found')
-
-    const hash = commit.sha.slice(0, 7)
-    const date = new Date(commit.commit.committer.date).toLocaleString()
-    el.textContent = `Commit ${hash} @ ${date} (${branch})`
-  } catch {
-    el.textContent = 'Commit info unavailable'
-  }
+  // Show login-section links after a tick (avoids flash)
+  setTimeout(() => document.getElementById('auth-login-section')?.classList.remove('hidden'), 50)
 }
 
 window.addEventListener('load', init)

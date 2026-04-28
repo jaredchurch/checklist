@@ -259,43 +259,23 @@ export function setupAboutDialog () {
 }
 
 /**
- * Fetch latest commit info from GitHub
+ * Fetch latest commit info from local JSON generated at build time
  */
 async function fetchCommitInfo () {
   const el = document.getElementById('about-commit-info') || document.getElementById('commit-info')
   if (!el) return
 
-  const repoOwner = 'jaredchurch'
-  const repoName = 'checklist'
-
   try {
-    let branch = 'main'
+    const resp = await fetch('src/commit-info.json')
+    if (!resp.ok) throw new Error('Commit info file not found')
 
-    const pagesResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/pages`)
-    if (pagesResp.ok) {
-      const pagesData = await pagesResp.json()
-      branch = pagesData.source?.branch || branch
-    } else {
-      const repoResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`)
-      if (repoResp.ok) {
-        const repoData = await repoResp.json()
-        branch = repoData.default_branch || branch
-      }
-    }
-
-    const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`)
-    if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`)
-    const commit = await commitResp.json()
-
-    const hash = commit.sha.slice(0, 7)
-    const date = new Date(commit.commit.committer.date).toLocaleString()
-    el.textContent = `Commit ${hash} @ ${date} (${branch})`
+    const info = await resp.json()
+    const date = new Date(info.date).toLocaleString()
+    el.textContent = `Commit ${info.hash} @ ${date} (${info.branch})`
   } catch (err) {
-    console.warn('Failed to load commit info', err)
     el.textContent = 'Commit info unavailable'
   }
 }
-
 /**
  * Setup import dialog with replace and sub-list options
  */
