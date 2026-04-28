@@ -259,60 +259,23 @@ export function setupAboutDialog () {
 }
 
 /**
- * Fetch latest commit info from GitHub with caching to avoid rate limits
+ * Fetch latest commit info from local JSON generated at build time
  */
 async function fetchCommitInfo () {
   const el = document.getElementById('about-commit-info') || document.getElementById('commit-info')
   if (!el) return
 
-  const CACHE_KEY = 'checklist-commit-cache'
-  const CACHE_TTL = 3600000 // 1 hour
-  const now = Date.now()
-
-  // Try to load from cache
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
-    if (cached && (now - cached.timestamp < CACHE_TTL)) {
-      if (cached.rateLimited && (now - cached.timestamp < CACHE_TTL)) {
-        el.textContent = 'Commit info unavailable'
-        return
-      }
-      if (cached.data) {
-        el.textContent = cached.data
-        return
-      }
-    }
-  } catch (e) {}
+    const resp = await fetch('src/commit-info.json')
+    if (!resp.ok) throw new Error('Commit info file not found')
 
-  const repoOwner = 'jaredchurch'
-  const repoName = 'checklist'
-
-  try {
-    const branch = 'main'
-    const commitResp = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits/${branch}`)
-
-    if (commitResp.status === 403) {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: now, rateLimited: true }))
-      throw new Error('Rate limited')
-    }
-
-    if (!commitResp.ok) throw new Error(`Commits API ${commitResp.status}`)
-    const commit = await commitResp.json()
-
-    const hash = commit.sha.slice(0, 7)
-    const date = new Date(commit.commit.committer.date).toLocaleString()
-    const infoText = `Commit ${hash} @ ${date} (${branch})`
-
-    el.textContent = infoText
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: now, data: infoText }))
+    const info = await resp.json()
+    const date = new Date(info.date).toLocaleString()
+    el.textContent = `Commit ${info.hash} @ ${date} (${info.branch})`
   } catch (err) {
-    if (err.message !== 'Rate limited') {
-      console.warn('Failed to load commit info', err)
-    }
     el.textContent = 'Commit info unavailable'
   }
 }
-
 /**
  * Setup import dialog with replace and sub-list options
  */
