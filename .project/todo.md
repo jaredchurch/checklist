@@ -7,3 +7,5 @@
 - [x] 7: resolve linting errors
 - [] 8: review code & commit history and expand requirements based on what is there now.
 - [x] 9: On iOS user should be able to touch and hold an item to then drag and drop to resort.
+- [] 10: Title Bar with centre alignment for title text and two context menus.
+- [] 11: Add feature for a sub-list that allows it to be configured either as-is or to display as flattened hierarchy below. This should the display all the items in this sub-list plus any sub-lists below this as if they're in a single list. When it is flattened each item should contain information to tell path to the sub-list it belongs to.
