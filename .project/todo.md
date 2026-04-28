@@ -6,3 +6,4 @@
 - [x] 6: add notes to agents.md that headers and comments (explain why of code) should always be written in code.
 - [x] 7: resolve linting errors
 - [] 8: review code & commit history and expand requirements based on what is there now.
+- [] 9: iOS use touch and hold to drive move behaviour
