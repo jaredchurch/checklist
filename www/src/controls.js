@@ -34,6 +34,44 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
   // Helper functions to access refs
   const getNodesRaw = () => nodesRef.current
   const getCurrentPath = () => currentPathRef.current
+  const settings = getSettings()
+  let continuousItemCreation = settings.continuousItemCreation !== false
+
+  /**
+   * Create a new item and optionally continue creating more
+   * If cancelled, delete the item
+   */
+  function createItemAndContinue (nodesRaw, parent, firstNode) {
+    let currentNode = firstNode
+
+    function createNext (node) {
+      showRenameDialog(node.title, (newTitle) => {
+        node.title = newTitle
+        saveData(nodesRaw)
+        renderFn()
+
+        if (continuousItemCreation) {
+          parent.children = parent.children || []
+          const newNode = createNode()
+          parent.children.push(newNode)
+          saveData(nodesRaw)
+          renderFn()
+          currentNode = newNode
+          createNext(newNode)
+        }
+      }, () => {
+        // Cancelled - remove the item
+        const idx = parent.children.indexOf(node)
+        if (idx !== -1) {
+          parent.children.splice(idx, 1)
+          saveData(nodesRaw)
+          renderFn()
+        }
+      })
+    }
+
+    createNext(currentNode)
+  }
 
   // Add item button - creates a new item and focuses it
   if (globalAddItem) {
@@ -52,16 +90,12 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       parent.children.push(newNode)
       saveData(nodesRaw)
       renderFn()
-      showRenameDialog(newNode.title, (newTitle) => {
-        newNode.title = newTitle
-        saveData(nodesRaw)
-        renderFn()
-      })
+      createItemAndContinue(nodesRaw, parent, newNode)
       globalContextLeft?.classList.remove('open')
     })
   }
 
-  // Add list button - creates a new sub-list and focuses it
+  // Add list button - creates a new sub-list, enters it, and creates a new item
   if (globalAddList) {
     globalAddList.addEventListener('click', () => {
       const nodesRaw = getNodesRaw()
@@ -74,7 +108,36 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       showRenameDialog(newNode.title, (newTitle) => {
         newNode.title = newTitle
         saveData(nodesRaw)
+        // Navigate into the new sub-list
+        currentPathRef.current.push(newNode.id)
+        // Create a new item in the sub-list
+        newNode.children = newNode.children || []
+        const newItem = createNode()
+        newNode.children.push(newItem)
+        saveData(nodesRaw)
         renderFn()
+        // Show rename dialog for the new item
+        showRenameDialog(newItem.title, (itemTitle) => {
+          newItem.title = itemTitle
+          saveData(nodesRaw)
+          renderFn()
+        }, () => {
+          // Cancelled item rename - remove the item but stay in list
+          const idx = newNode.children.indexOf(newItem)
+          if (idx !== -1) {
+            newNode.children.splice(idx, 1)
+            saveData(nodesRaw)
+            renderFn()
+          }
+        })
+      }, () => {
+        // Cancelled list rename - remove the list
+        const idx = parent.children.indexOf(newNode)
+        if (idx !== -1) {
+          parent.children.splice(idx, 1)
+          saveData(nodesRaw)
+          renderFn()
+        }
       })
       globalContextLeft?.classList.remove('open')
     })
@@ -131,6 +194,17 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       showUpDownActions = !showUpDownActions
       saveSettings({ showUpDownActions })
       setState({ showUpDownActions })
+      renderFn()
+      globalContext?.classList.remove('open')
+    })
+  }
+
+  // Toggle continuous item creation
+  const globalToggleContinuous = document.getElementById('global-toggle-continuous')
+  if (globalToggleContinuous) {
+    globalToggleContinuous.addEventListener('click', () => {
+      continuousItemCreation = !continuousItemCreation
+      saveSettings({ continuousItemCreation })
       renderFn()
       globalContext?.classList.remove('open')
     })

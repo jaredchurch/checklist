@@ -9,3 +9,6 @@
 - [x] 9: On iOS user should be able to touch and hold an item to then drag and drop to resort.
 - [x] 10: Title Bar with centre alignment for title text and two context menus.
 - [] 11: Add feature for a sub-list that allows it to be configured either as-is or to display as flattened hierarchy below. This should the display all the items in this sub-list plus any sub-lists below this as if they're in a single list. When it is flattened each item should contain information to tell path to the sub-list it belongs to.
+- [x] 12. create new sub-list should auto enter that sub-list and create a new item on the completion of the rename operation as a part of the create.
+- [x] 13. create new item should default behaviour to auto-create another new item after the rename operation. there should be an option to not go on to the next new item.
+- [x] 14. if cancel is pressed when creating a new item, then the new item should be deleted.

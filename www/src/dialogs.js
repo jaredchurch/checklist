@@ -67,8 +67,11 @@ export function promptImportData (nodesRaw, renderFn) {
 
 /**
  * Show rename dialog and return the new name (via callback) or null if cancelled
+ * @param {string} currentName - The current name of the item
+ * @param {function} onRename - Callback with new name when saved
+ * @param {function} [onCancel] - Optional callback when cancelled
  */
-export function showRenameDialog (currentName, onRename) {
+export function showRenameDialog (currentName, onRename, onCancel) {
   const overlay = document.createElement('div')
   overlay.className = 'rename-dialog'
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:100;'
@@ -108,7 +111,10 @@ export function showRenameDialog (currentName, onRename) {
     document.body.removeChild(overlay)
   }
 
-  cancelBtn.addEventListener('click', close)
+  cancelBtn.addEventListener('click', () => {
+    if (onCancel) onCancel()
+    close()
+  })
 
   saveBtn.addEventListener('click', () => {
     onRename(input.value)
@@ -117,6 +123,7 @@ export function showRenameDialog (currentName, onRename) {
 
   overlay.addEventListener('click', (evt) => {
     if (evt.target === overlay) {
+      if (onCancel) onCancel()
       close()
     }
   })
@@ -130,6 +137,7 @@ export function showRenameDialog (currentName, onRename) {
       close()
     }
     if (evt.key === 'Escape') {
+      if (onCancel) onCancel()
       close()
     }
   })
