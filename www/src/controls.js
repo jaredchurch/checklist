@@ -150,7 +150,7 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
         // Reset styles for measurement
         globalContext.style.top = '100%'
         globalContext.style.bottom = 'auto'
-        globalContext.style.marginTop = '0.25rem'
+        globalContext.style.marginTop = '2px'
         globalContext.style.marginBottom = '0'
 
         const rect = globalContext.getBoundingClientRect()
@@ -162,7 +162,7 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
           globalContext.style.top = 'auto'
           globalContext.style.bottom = '100%'
           globalContext.style.marginTop = '0'
-          globalContext.style.marginBottom = '0.25rem'
+          globalContext.style.marginBottom = '2px'
         }
       }
       updateMenuLock()
@@ -174,13 +174,22 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       const isOpen = globalContextLeft.classList.contains('open')
       globalContextLeft.classList.toggle('open')
       if (!isOpen) {
+        // Reset styles for measurement
+        globalContextLeft.style.top = '100%'
+        globalContextLeft.style.bottom = 'auto'
+        globalContextLeft.style.marginTop = '2px'
+        globalContextLeft.style.marginBottom = '0'
+
         const rect = globalContextLeft.getBoundingClientRect()
-        if (rect.bottom > window.innerHeight) {
+        const breadcrumbBar = document.getElementById('breadcrumb-bar')
+        const buffer = 10
+        const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+
+        if (rect.bottom > bottomLimit - buffer) {
           globalContextLeft.style.top = 'auto'
-          globalContextLeft.style.bottom = '110%'
-        } else {
-          globalContextLeft.style.top = '110%'
-          globalContextLeft.style.bottom = 'auto'
+          globalContextLeft.style.bottom = '100%'
+          globalContextLeft.style.marginTop = '0'
+          globalContextLeft.style.marginBottom = '2px'
         }
       }
       updateMenuLock()

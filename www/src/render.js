@@ -328,11 +328,11 @@ export function renderTree (nodes, container, options = {}) {
       const menu = card.querySelector('.item-context-menu')
       if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
-        
+
         // Reset styles for measurement
         menu.style.top = '100%'
         menu.style.bottom = 'auto'
-        menu.style.marginTop = '0.25rem'
+        menu.style.marginTop = '2px'
         menu.style.marginBottom = '0'
 
         const rect = menu.getBoundingClientRect()
@@ -344,7 +344,7 @@ export function renderTree (nodes, container, options = {}) {
           menu.style.top = 'auto'
           menu.style.bottom = '100%'
           menu.style.marginTop = '0'
-          menu.style.marginBottom = '0.25rem'
+          menu.style.marginBottom = '2px'
         }
         updateMenuLock()
       } else {
@@ -456,7 +456,7 @@ export function renderTree (nodes, container, options = {}) {
 
     // Context menu toggle button
     const contextToggle = document.createElement('button')
-    contextToggle.textContent = '⋮'
+    contextToggle.textContent = '☰'
     contextToggle.className = 'small-button context-toggle'
     contextToggle.style.minWidth = '1rem'
     contextToggle.title = 'More options'
@@ -467,11 +467,11 @@ export function renderTree (nodes, container, options = {}) {
       const menu = card.querySelector('.item-context-menu')
       if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
-        
+
         // Reset styles for measurement
         menu.style.top = '100%'
         menu.style.bottom = 'auto'
-        menu.style.marginTop = '0.25rem'
+        menu.style.marginTop = '2px'
         menu.style.marginBottom = '0'
 
         const rect = menu.getBoundingClientRect()
@@ -483,7 +483,7 @@ export function renderTree (nodes, container, options = {}) {
           menu.style.top = 'auto'
           menu.style.bottom = '100%'
           menu.style.marginTop = '0'
-          menu.style.marginBottom = '0.25rem'
+          menu.style.marginBottom = '2px'
         }
         updateMenuLock()
       } else {

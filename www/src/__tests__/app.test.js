@@ -149,11 +149,11 @@ describe('Checklist core logic', () => {
     renderTree(root.children, container, { nodesRaw: root })
 
     const firstItem = container.querySelectorAll('li')[0]
-    const firstItemMenuToggle = [...firstItem.querySelectorAll('button')].find((b) => b.textContent === '⋮')
+    const firstItemMenuToggle = [...firstItem.querySelectorAll('button')].find((b) => b.textContent === '☰')
     expect(firstItemMenuToggle).toBeDefined()
 
     const secondListItem = container.querySelectorAll('li')[1]
-    const secondListMenuToggle = [...secondListItem.querySelectorAll('button')].find((b) => b.textContent === '⋮')
+    const secondListMenuToggle = [...secondListItem.querySelectorAll('button')].find((b) => b.textContent === '☰')
     expect(secondListMenuToggle).toBeDefined()
 
     const firstListItemButtons = [...firstItem.querySelectorAll('button')].map((b) => b.textContent)
