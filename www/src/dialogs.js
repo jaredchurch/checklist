@@ -266,7 +266,7 @@ async function fetchCommitInfo () {
   if (!el) return
 
   try {
-    const resp = await fetch('src/commit-info.json')
+    const resp = await fetch('www/src/commit-info.json')
     if (!resp.ok) throw new Error('Commit info file not found')
 
     const info = await resp.json()

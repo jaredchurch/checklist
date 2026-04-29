@@ -2,7 +2,7 @@
   "name": "Checklist PWA",
   "short_name": "Checklist",
   "description": "Infinite nested checklist app with local data and import/export.",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2196f3",
