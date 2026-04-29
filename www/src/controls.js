@@ -110,26 +110,13 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
         saveData(nodesRaw)
         // Navigate into the new sub-list
         currentPathRef.current.push(newNode.id)
-        // Create a new item in the sub-list
+        // Create a new item in the sub-list with continuous creation
         newNode.children = newNode.children || []
         const newItem = createNode()
         newNode.children.push(newItem)
         saveData(nodesRaw)
         renderFn()
-        // Show rename dialog for the new item
-        showRenameDialog(newItem.title, (itemTitle) => {
-          newItem.title = itemTitle
-          saveData(nodesRaw)
-          renderFn()
-        }, () => {
-          // Cancelled item rename - remove the item but stay in list
-          const idx = newNode.children.indexOf(newItem)
-          if (idx !== -1) {
-            newNode.children.splice(idx, 1)
-            saveData(nodesRaw)
-            renderFn()
-          }
-        })
+        createItemAndContinue(nodesRaw, newNode, newItem)
       }, () => {
         // Cancelled list rename - remove the list
         const idx = parent.children.indexOf(newNode)

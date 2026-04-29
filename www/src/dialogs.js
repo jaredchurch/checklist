@@ -74,10 +74,10 @@ export function promptImportData (nodesRaw, renderFn) {
 export function showRenameDialog (currentName, onRename, onCancel) {
   const overlay = document.createElement('div')
   overlay.className = 'rename-dialog'
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:100;'
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:100;pointer-events:auto;'
 
   const content = document.createElement('div')
-  content.style.cssText = 'background:#fff;border-radius:0.5rem;padding:1.5rem;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,0.2);'
+  content.style.cssText = 'background:#fff;border-radius:0.5rem;padding:1.5rem;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,0.2);pointer-events:auto;'
 
   const title = document.createElement('h2')
   title.textContent = 'Rename'
@@ -106,6 +106,11 @@ export function showRenameDialog (currentName, onRename, onCancel) {
   content.appendChild(buttons)
   overlay.appendChild(content)
   document.body.appendChild(overlay)
+
+  // Ensure pointer events work on the dialog
+  ;[overlay, content, input, cancelBtn, saveBtn].forEach(el => {
+    el.style.pointerEvents = 'auto'
+  })
 
   const close = () => {
     document.body.removeChild(overlay)
