@@ -329,22 +329,28 @@ export function renderTree (nodes, container, options = {}) {
       if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
 
-        // Reset styles for measurement
-        menu.style.top = '100%'
+        // Position menu at click location
+        menu.style.position = 'fixed'
+        menu.style.top = `${evt.clientY}px`
+        menu.style.left = `${evt.clientX}px`
+        menu.style.right = 'auto'
         menu.style.bottom = 'auto'
-        menu.style.marginTop = '2px'
+        menu.style.marginTop = '0'
         menu.style.marginBottom = '0'
 
         const rect = menu.getBoundingClientRect()
         const breadcrumbBar = document.getElementById('breadcrumb-bar')
         const buffer = 10
         const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+        const windowWidth = window.innerWidth
 
+        // Adjust if menu goes off bottom
         if (rect.bottom > bottomLimit - buffer) {
-          menu.style.top = 'auto'
-          menu.style.bottom = '100%'
-          menu.style.marginTop = '0'
-          menu.style.marginBottom = '2px'
+          menu.style.top = `${evt.clientY - rect.height}px`
+        }
+        // Adjust if menu goes off right
+        if (rect.right > windowWidth - buffer) {
+          menu.style.left = `${windowWidth - rect.width - buffer}px`
         }
         updateMenuLock()
       } else {
@@ -468,22 +474,29 @@ export function renderTree (nodes, container, options = {}) {
       if (menu && !isAlreadyOpen) {
         menu.classList.add('open')
 
-        // Reset styles for measurement
-        menu.style.top = '100%'
+        // Position menu below the toggle button
+        const btnRect = contextToggle.getBoundingClientRect()
+        menu.style.position = 'fixed'
+        menu.style.top = `${btnRect.bottom}px`
+        menu.style.left = `${btnRect.right - menu.offsetWidth}px`
+        menu.style.right = 'auto'
         menu.style.bottom = 'auto'
-        menu.style.marginTop = '2px'
+        menu.style.marginTop = '0'
         menu.style.marginBottom = '0'
 
         const rect = menu.getBoundingClientRect()
         const breadcrumbBar = document.getElementById('breadcrumb-bar')
         const buffer = 10
         const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+        const windowWidth = window.innerWidth
 
+        // Adjust if menu goes off bottom
         if (rect.bottom > bottomLimit - buffer) {
-          menu.style.top = 'auto'
-          menu.style.bottom = '100%'
-          menu.style.marginTop = '0'
-          menu.style.marginBottom = '2px'
+          menu.style.top = `${btnRect.top - rect.height}px`
+        }
+        // Adjust if menu goes off right
+        if (rect.right > windowWidth - buffer) {
+          menu.style.left = `${windowWidth - rect.width - buffer}px`
         }
         updateMenuLock()
       } else {

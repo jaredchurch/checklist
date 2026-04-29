@@ -183,9 +183,7 @@ input[type="file"]:hover {
   color: #6b7280;
 }
 .context-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
+  position: fixed;
   display: none;
   flex-direction: column;
   border: 1px solid #cbd5e1;
@@ -195,7 +193,6 @@ input[type="file"]:hover {
   z-index: 60;
   min-width: 10rem;
   padding: 0.25rem;
-  margin-top: 2px;
 }
 .context-menu.open {
   display: flex;

@@ -147,22 +147,27 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       const isOpen = globalContext.classList.contains('open')
       globalContext.classList.toggle('open')
       if (!isOpen) {
-        // Reset styles for measurement
-        globalContext.style.top = '100%'
+        // Position menu below the toggle button
+        const btnRect = globalContextToggle.getBoundingClientRect()
+        globalContext.style.position = 'fixed'
+        globalContext.style.top = `${btnRect.bottom}px`
+        globalContext.style.left = `${btnRect.right - globalContext.offsetWidth}px`
+        globalContext.style.right = 'auto'
         globalContext.style.bottom = 'auto'
-        globalContext.style.marginTop = '2px'
-        globalContext.style.marginBottom = '0'
 
         const rect = globalContext.getBoundingClientRect()
         const breadcrumbBar = document.getElementById('breadcrumb-bar')
         const buffer = 10
         const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+        const windowWidth = window.innerWidth
 
+        // Adjust if menu goes off bottom
         if (rect.bottom > bottomLimit - buffer) {
-          globalContext.style.top = 'auto'
-          globalContext.style.bottom = '100%'
-          globalContext.style.marginTop = '0'
-          globalContext.style.marginBottom = '2px'
+          globalContext.style.top = `${btnRect.top - rect.height}px`
+        }
+        // Adjust if menu goes off right
+        if (rect.right > windowWidth - buffer) {
+          globalContext.style.left = `${windowWidth - rect.width - buffer}px`
         }
       }
       updateMenuLock()
@@ -174,22 +179,27 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
       const isOpen = globalContextLeft.classList.contains('open')
       globalContextLeft.classList.toggle('open')
       if (!isOpen) {
-        // Reset styles for measurement
-        globalContextLeft.style.top = '100%'
+        // Position menu below the toggle button
+        const btnRect = globalContextToggleLeft.getBoundingClientRect()
+        globalContextLeft.style.position = 'fixed'
+        globalContextLeft.style.top = `${btnRect.bottom}px`
+        globalContextLeft.style.left = `${btnRect.left}px`
+        globalContextLeft.style.right = 'auto'
         globalContextLeft.style.bottom = 'auto'
-        globalContextLeft.style.marginTop = '2px'
-        globalContextLeft.style.marginBottom = '0'
 
         const rect = globalContextLeft.getBoundingClientRect()
         const breadcrumbBar = document.getElementById('breadcrumb-bar')
         const buffer = 10
         const bottomLimit = breadcrumbBar ? breadcrumbBar.getBoundingClientRect().top : window.innerHeight
+        const windowWidth = window.innerWidth
 
+        // Adjust if menu goes off bottom
         if (rect.bottom > bottomLimit - buffer) {
-          globalContextLeft.style.top = 'auto'
-          globalContextLeft.style.bottom = '100%'
-          globalContextLeft.style.marginTop = '0'
-          globalContextLeft.style.marginBottom = '2px'
+          globalContextLeft.style.top = `${btnRect.top - rect.height}px`
+        }
+        // Adjust if menu goes off right
+        if (rect.right > windowWidth - buffer) {
+          globalContextLeft.style.left = `${windowWidth - rect.width - buffer}px`
         }
       }
       updateMenuLock()
