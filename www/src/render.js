@@ -157,6 +157,14 @@ export function render (onToggleDone, nodesRef, currentPathRef) {
     toggleButton.disabled = isCompleted
     toggleButton.textContent = showUpDownActions ? 'Hide Sorting' : 'Show Sorting'
   }
+
+  // Update continuous item creation button
+  const continuousButton = document.getElementById('global-toggle-continuous')
+  if (continuousButton) {
+    const settings = getSettings()
+    const isContinuous = settings.continuousItemCreation !== false
+    continuousButton.textContent = isContinuous ? 'Disable Continuous' : 'Enable Continuous'
+  }
 }
 
 /**

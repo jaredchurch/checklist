@@ -61,17 +61,20 @@ export function saveData (data) {
 export function getSettings () {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (!raw) return { showUpDownActions: false }
+    if (!raw) return { showUpDownActions: false, continuousItemCreation: true }
     const parsed = JSON.parse(raw)
     return {
       showUpDownActions: typeof parsed.showUpDownActions === 'boolean'
         ? parsed.showUpDownActions
-        : false
+        : false,
+      continuousItemCreation: typeof parsed.continuousItemCreation === 'boolean'
+        ? parsed.continuousItemCreation
+        : true
     }
   } catch (err) {
     console.error('Invalid saved settings', err)
     localStorage.removeItem(SETTINGS_KEY)
-    return { showUpDownActions: false }
+    return { showUpDownActions: false, continuousItemCreation: true }
   }
 }
 

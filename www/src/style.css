@@ -326,11 +326,13 @@ body.menu-open * {
 }
 
 body.menu-open .context-menu,
-body.menu-open .context-toggle {
+body.menu-open .context-toggle,
+body.menu-open .rename-dialog {
   pointer-events: auto;
 }
 
-body.menu-open .context-menu * {
+body.menu-open .context-menu *,
+body.menu-open .rename-dialog * {
   pointer-events: auto;
 }
 .summary { font-size: 0.8rem; color: #666; white-space: nowrap; flex-shrink: 0; }
