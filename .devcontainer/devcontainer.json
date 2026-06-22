@@ -1,9 +1,7 @@
 {
-	"image": "mcr.microsoft.com/devcontainers/base:trixie",
+	"image": "ghcr.io/jaredchurch/base:v3",
 	"features": {
-		"./features/opencode": {},
-		"./features/locale-nz": {},
-		"./features/github-cli": {}
+		"./features/opencode": {}
 	},
 	"containerEnv": {
 		"LANG": "en_NZ.UTF-8",
