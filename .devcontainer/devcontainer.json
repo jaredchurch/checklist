@@ -1,8 +1,11 @@
 {
 	"image": "ghcr.io/jaredchurch/base:v3",
 	"features": {
-		"./features/opencode": {}
+		"./features/opencode": {},
+		"./features/gemini": {},
+		"./features/spec-kit": {}
 	},
+	"onCreateCommand": "env",
 	"containerEnv": {
 		"LANG": "en_NZ.UTF-8",
 		"LC_ALL": "en_NZ.UTF-8"
