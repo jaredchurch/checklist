@@ -5,7 +5,7 @@
 
 import { findParent, findNodeById, getDescendantItemSummary, sortNodeChildren } from './tree.js'
 import { getCurrentNodes } from './sorting.js'
-import { saveData, saveSettings, getSettings } from './storage.js'
+import { saveData, saveSettings, getSettings, removeNode } from './storage.js'
 import { showRenameDialog } from './dialogs.js'
 
 // Module-level state (fallback when refs not provided)
@@ -532,11 +532,10 @@ export function renderTree (nodes, container, options = {}) {
     deleteButton.textContent = 'Delete'
     deleteButton.className = 'destructive'
     deleteButton.addEventListener('click', () => {
-      const parent = findParent(nodesRawRef, node.id)
-      const array = parent ? parent.children : nodesRawRef.children
-      const idx = array.findIndex((c) => c.id === node.id)
-      if (idx !== -1) {
-        array.splice(idx, 1)
+      // Tombstone rather than splice: a hard removal is invisible to the other
+      // device, which would keep the item and put it straight back into the
+      // union on the next cycle.
+      if (removeNode(nodesRawRef, node.id)) {
         saveData(nodesRawRef)
         onToggleDone()
       }

@@ -14,15 +14,7 @@ export { collectIdsUtil as collectIds }
  * @returns {object} A new item node
  */
 export function createNode (title = 'New item') {
-  return {
-    id: uid(),
-    type: 'item',
-    title,
-    done: false,
-    children: [],
-    order: getNextOrder(),
-    isNew: true
-  }
+  return newNode({ title, type: 'item', done: false })
 }
 
 /**
@@ -31,13 +23,25 @@ export function createNode (title = 'New item') {
  * @returns {object} A new list node
  */
 export function createListNode (title = 'New list') {
+  return newNode({ title, type: 'list' })
+}
+
+/**
+ * Build a node with the fields sync needs from the moment it exists.
+ *
+ * `updatedAt` is set at creation rather than left for the first `saveData`, so a
+ * node is never briefly timestamp-less — a record with no `updatedAt` cannot be
+ * merged, because there is nothing to order it against another device's copy.
+ */
+function newNode (base) {
+  const stamp = new Date().toISOString()
   return {
     id: uid(),
-    type: 'list',
-    title,
     children: [],
     order: getNextOrder(),
-    isNew: true
+    createdAt: stamp,
+    updatedAt: stamp,
+    ...base
   }
 }
 

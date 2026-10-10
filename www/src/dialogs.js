@@ -6,6 +6,7 @@
 import { sanitizeTree, collectIds } from './tree.js'
 import { saveData } from './storage.js'
 import { updateMenuLock } from './render.js'
+import { beginEdit, endEdit } from './sync/editGate.js'
 
 /**
  * Export entire checklist data as JSON file
@@ -112,7 +113,22 @@ export function showRenameDialog (currentName, onRename, onCancel) {
     el.style.pointerEvents = 'auto'
   })
 
+  /*
+   * Idempotent, and it releases the edit gate exactly once per dialog.
+   *
+   * There are five ways out of this dialog — save, cancel, backdrop, Enter,
+   * Escape — and the callbacks above all run *before* `close()`, because saving
+   * has to touch the node the caller is about to re-render. With continuous item
+   * creation that ordering nests: saving item two opens item three's dialog from
+   * inside this one's callback, so the counter goes 1 → 2 → 1 and only settles
+   * when the last dialog closes. A flag would read "done" while item three was
+   * still open.
+   */
+  let closed = false
   const close = () => {
+    if (closed) return
+    closed = true
+    endEdit()
     document.body.removeChild(overlay)
   }
 
@@ -132,6 +148,17 @@ export function showRenameDialog (currentName, onRename, onCancel) {
       close()
     }
   })
+
+  /*
+   * Open the edit gate last.
+   *
+   * Everything above can throw — `appendChild` against a body that is not there,
+   * a detached document. Opening the gate first would leak a depth that nothing
+   * ever balances, and the scheduler would then hold every cycle for the rest of
+   * the session: sync would stop entirely, with nothing on screen to say why.
+   * Here the gate is only open once every exit path exists to close it.
+   */
+  beginEdit()
 
   input.focus()
   input.select()

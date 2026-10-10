@@ -12,7 +12,7 @@
 - [x] REQ9: show/hide manual sort controls (up/down arrows)
 - [x] REQ10: local storage persistence (localStorage)
 - [x] REQ11: JSON export/import backup and restore
-- [x] REQ12: optional Firebase sync (when configured)
+- [x] REQ12: optional sync to the user's own Dropbox (opt-in, PKCE, app folder)
 - [x] REQ13: PWA installable on desktop and iOS
 - [x] REQ14: service worker caching + offline support
 - [x] REQ15: vitest regression tests
@@ -21,6 +21,9 @@
 ## Implementation Notes
 
 - Storage uses localStorage (not IndexedDB as AGENTS.md incorrectly states)
+- Sync is opt-in and to the user's own Dropbox, not a shared backend. No account
+  is required to use the app; nothing leaves the browser until Dropbox is connected.
+  Credentials live in IndexedDB, never localStorage, and never in an export.
 - Sort methodology:
   - Done sub-lists (all children done) treated same as done items
   - Done items sorted below not-done items

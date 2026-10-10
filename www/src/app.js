@@ -2,30 +2,26 @@
  * Checklist PWA — Main Application Entry Point
  *
  * Initialisation order:
- *  1. Firebase (if configured)
- *  2. Auth overlay wiring
- *  3. On sign-in  → initSync → load data (remote wins if newer) → render
- *  4. On sign-out → teardownSync → keep local data → render
- *  5. No Firebase → skip auth entirely, render with local data only
+ *  1. Load local data (IndexedDB is not used; localStorage holds everything)
+ *  2. Start the sync scheduler, which runs a cycle on load
+ *  3. Render, and re-render whenever sync writes back merged remote data
+ *
+ * Local-first, throughout: nothing in the boot path waits on the network. If
+ * Dropbox is unreachable, slow, or not set up at all, the app renders exactly
+ * as it would offline.
  */
 
 import { createListNode } from './tree.js'
-import { getData, registerSyncHook, saveData } from './storage.js'
+import { getData, saveData, readSnapshot, writeSnapshot, subscribeRevision, readLastRev, writeLastRev, readLastSyncAt, writeLastSyncAt } from './storage.js'
 import { registerControls } from './controls.js'
 import { render, initState } from './render.js'
-import { initFirebase, isFirebaseConfigured } from './firebase.js'
-import { initAuth, bindAuthOverlay, signOut } from './auth.js'
-import { initSync, syncSave, teardownSync } from './sync.js'
+import { SyncScheduler } from './sync/scheduler.js'
+import { dropboxProvider, REMOTE_PATH } from './sync/providerFactory.js'
+import { createSyncPanel } from './syncPanel.js'
+import { fireAndForget } from './sync/fireAndForget.js'
 
-// ── Bootstrap ────────────────────────────────────────────────────────────────
 function init () {
   document.title = 'Checklist'
-
-  // Try to start Firebase (will be a no-op if window.__FIREBASE_CONFIG__ absent)
-  initFirebase()
-
-  // Wire up the sync hook so storage.js pushes saves to the cloud
-  registerSyncHook(syncSave)
 
   // Shared mutable refs — all modules read/write through these
   const nodesRef = { current: null }
@@ -36,7 +32,7 @@ function init () {
     render(() => renderFn(), nodesRef, currentPathRef)
   }
 
-  // ── Helper: boot the app with a given dataset ──────────────────────────────
+  // ── Boot with a given dataset ─────────────────────────────────────────────
   function bootApp (data) {
     const defaultList = createListNode('My Checklist')
     nodesRef.current = data || defaultList
@@ -46,57 +42,55 @@ function init () {
     renderFn()
   }
 
-  // ── Auth callbacks ─────────────────────────────────────────────────────────
-  async function onSignedIn (user) {
-    // Pull remote data; sync engine will call saveData/onRemoteData if newer
-    await initSync(user.uid, remoteData => {
-      nodesRef.current = remoteData
+  // ── Sync ───────────────────────────────────────────────────────────────────
+  // Held in a `let` because the panel is built after the scheduler, and the
+  // scheduler is the only thing that discovers a credential has died.
+  let syncPanel = null
+
+  const scheduler = new SyncScheduler({
+    provider: dropboxProvider(),
+    path: REMOTE_PATH,
+    readLocal: async () => readSnapshot(),
+    /*
+     * The engine writes the merged union back through here. The tree the user is
+     * looking at is replaced with it, so a change made on another device
+     * appears without a reload.
+     */
+    writeLocal: async (snapshot) => {
+      nodesRef.current = writeSnapshot(snapshot)
       currentPathRef.current = []
-      initState(remoteData)
+      initState(nodesRef.current)
       renderFn()
-    })
+    },
+    readLastRev: async () => readLastRev(),
+    writeLastRev: async (rev) => writeLastRev(rev),
+    readLastSyncAt: async () => readLastSyncAt(),
+    writeLastSyncAt: async (at) => writeLastSyncAt(at),
+    subscribeRevision,
+    // The panel owns the connection state, and the scheduler is the only thing
+    // that discovers a credential has expired or been revoked. Without this the
+    // app would carry on showing "connected" after it had just signed out, and
+    // never offer the Connect button that would fix it.
+    onAuthLost: () => syncPanel?.refresh()
+  })
 
-    // Use whatever data is now in localStorage (may have been updated by sync)
-    const data = getData()
-    bootApp(data)
-  }
+  syncPanel = createSyncPanel(scheduler)
 
-  function onSignedOut () {
-    teardownSync()
-    // Keep showing local data — don't wipe it
-    const data = getData()
-    bootApp(data)
-  }
-
-  // ── Register controls (once, independent of auth state) ───────────────────
   registerControls(nodesRef, currentPathRef, renderFn)
 
-  // ── Auth ───────────────────────────────────────────────────────────────────
-  if (isFirebaseConfigured()) {
-    // Bind the overlay UI buttons
-    bindAuthOverlay()
+  // Load local data first so the app is usable before sync has said anything.
+  bootApp(getData())
 
-    // Wire sign-out button in header
-    document.getElementById('auth-signout-btn')
-      ?.addEventListener('click', () => signOut())
+  // Started without awaiting: a slow or unreachable Dropbox must never delay
+  // the app becoming usable. The scheduler serialises its own cycles.
+  fireAndForget(scheduler.start())
 
-    // Start watching auth state
-    initAuth({ onSignedIn, onSignedOut })
-  } else {
-    // No Firebase — pure local mode, render immediately
-    const data = getData()
-    bootApp(data)
-  }
-
-  // ── PWA service worker ────────────────────────────────────────────────────
+  // ── PWA service worker ───────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/www/sw.js')
       .then(() => console.log('Service worker registered'))
       .catch(err => console.error('SW registration failed', err))
   }
-
-  // Show login-section links after a tick (avoids flash)
-  setTimeout(() => document.getElementById('auth-login-section')?.classList.remove('hidden'), 50)
 }
 
 window.addEventListener('load', init)

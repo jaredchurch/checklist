@@ -4,7 +4,7 @@
  */
 
 import { createNode, createListNode, setTreeDone, sortNodeChildren } from './tree.js'
-import { saveData, saveSettings, getSettings } from './storage.js'
+import { saveData, saveSettings, getSettings, removeNode } from './storage.js'
 import { updateMenuLock, getCurrentParentNode, setState } from './render.js'
 import { exportData, exportSubListData, setupImportDialog, setupAboutDialog, showRenameDialog } from './dialogs.js'
 
@@ -60,10 +60,9 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
           createNext(newNode)
         }
       }, () => {
-        // Cancelled - remove the item
-        const idx = parent.children.indexOf(node)
-        if (idx !== -1) {
-          parent.children.splice(idx, 1)
+        // Cancelled - discard the item, leaving a tombstone so the other
+        // device's copy of it does not reappear on the next sync.
+        if (removeNode(nodesRaw, node.id)) {
           saveData(nodesRaw)
           renderFn()
         }
@@ -118,10 +117,8 @@ export function registerControls (nodesRef, currentPathRef, renderFn) {
         renderFn()
         createItemAndContinue(nodesRaw, newNode, newItem)
       }, () => {
-        // Cancelled list rename - remove the list
-        const idx = parent.children.indexOf(newNode)
-        if (idx !== -1) {
-          parent.children.splice(idx, 1)
+        // Cancelled list rename - discard the list and everything under it
+        if (removeNode(nodesRaw, newNode.id)) {
           saveData(nodesRaw)
           renderFn()
         }
