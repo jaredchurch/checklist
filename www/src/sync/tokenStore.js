@@ -1,4 +1,18 @@
-import { get, set, del } from 'idb-keyval'
+/**
+ * Imported from a full CDN URL rather than the bare `idb-keyval` specifier.
+ *
+ * A bare specifier only resolves through a bundler. This app's deployed copy is
+ * served as unbuilt ES modules, so a bare specifier throws
+ * `Failed to resolve module specifier` in the browser — and because module
+ * imports are static and hoisted, one bad specifier takes down the whole import
+ * graph. That meant the entire app failed to start, not just sync.
+ *
+ * A full URL resolves in a browser *and* survives a Vite build untouched, so
+ * this import is correct under both deployment shapes. The bundled copy keeps
+ * paying a CDN round trip; that is the price of the deploy serving source, and
+ * it disappears if the site is changed to publish `dist/`.
+ */
+import { get, set, del } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm'
 
 /**
  * Token storage backed by IndexedDB.
