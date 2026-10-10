@@ -1,13 +1,14 @@
-const CACHE_NAME = 'checklist-pwa-v1'
+// Bumped whenever the app shell changes. The activate handler deletes any cache
+// that is not this name, so a bump is what retires a precache still holding
+// files the current build no longer ships.
+const CACHE_NAME = 'checklist-pwa-v2'
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/www/manifest.webmanifest',
   '/www/src/main.js',
   '/www/src/app.js',
-  '/www/src/auth.js',
-  '/www/src/firebase.js',
-  '/www/src/sync.js',
+  '/www/src/syncPanel.js',
   '/www/src/storage.js',
   '/www/src/controls.js',
   '/www/src/render.js',
@@ -16,7 +17,20 @@ const PRECACHE_ASSETS = [
   '/www/src/sorting.js',
   '/www/src/utils.js',
   '/www/src/style.css',
-  '/www/src/firebase-config.js',
+  '/www/src/sync/appKey.js',
+  '/www/src/sync/config.js',
+  '/www/src/sync/dropbox.js',
+  '/www/src/sync/engine.js',
+  '/www/src/sync/envelope.js',
+  '/www/src/sync/fireAndForget.js',
+  '/www/src/sync/merge.js',
+  '/www/src/sync/oauthCallback.js',
+  '/www/src/sync/provider.js',
+  '/www/src/sync/providerFactory.js',
+  '/www/src/sync/redirect.js',
+  '/www/src/sync/scheduler.js',
+  '/www/src/sync/snapshot.js',
+  '/www/src/sync/tokenStore.js',
   '/www/icons/favicon-180.png',
   '/www/favicon.ico'
 ]

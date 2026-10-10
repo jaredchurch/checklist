@@ -1,7 +1,7 @@
 - [] 1: remove the sorting arrows and option to turn those on/off in the global context menu.
 - [x] 2: create a www folder, and move all objects that get served into that sub-folder
 - [x] 3: change the favicon-180.png - put it into a favicon.ico object (to get rid of favicon.ico error in console)
-- [] 4: review firebase design for security. each user should have to connect to their own firebase - credentials for it should be stored in local storage and handled as secure elements.
+- [x] 4: review sync design for security. Superseded by the Dropbox integration: each user connects their own Dropbox, so there is no shared backend and no cross-user exposure. Credentials live in IndexedDB rather than localStorage, are excluded from exports structurally, and the app is a PKCE public client with no secret. See DROPBOX_SETUP.md.
 - [x] 5: segregate CSS, javascript and html - they should not be in the same files. Add notes on this to agents.md
 - [x] 6: add notes to agents.md that headers and comments (explain why of code) should always be written in code.
 - [x] 7: resolve linting errors
