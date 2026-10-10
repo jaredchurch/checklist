@@ -11,13 +11,25 @@
  * No imports, deliberately: this sits below everything else in `sync/`.
  */
 
+/**
+ * The path this deployment is served under, with a trailing slash.
+ *
+ * `import.meta.env.BASE_URL` is the authority when the app has been bundled —
+ * Vite substitutes it at build time. The deployed copy of this app is served as
+ * unbuilt ES modules, though, where `import.meta` exists but carries no `env`, so
+ * reading `.BASE_URL` off it throws before a connection can even be attempted.
+ *
+ * The fallback derives the same answer from where the document actually is,
+ * which is more truthful than a hardcoded path: it is correct on GitHub Pages
+ * under `/checklist/`, at a subdomain root, and in local development, with no
+ * value to keep in step. `[^/]*$` strips the last path segment, so
+ * `/checklist/index.html` and `/checklist/` both yield `/checklist/`.
+ */
 function basePath () {
-  // Read through a declared shape: `import.meta.env` is untyped outside a
-  // Vite-aware module and yields `any`.
   const env = import.meta.env
-  // `BASE_URL` carries the trailing slash Vite assumes, so a redirect to the
-  // bare directory name would not match what was registered.
-  return env.BASE_URL || '/'
+  if (env && env.BASE_URL) return env.BASE_URL
+  if (typeof window === 'undefined') return '/'
+  return window.location.pathname.replace(/[^/]*$/, '') || '/'
 }
 
 /**
