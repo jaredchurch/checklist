@@ -362,8 +362,8 @@ body.menu-open .rename-dialog * {
  * because "Saved" with no connection is the one claim this app must never make.
  */
 .sync-status.disconnected {
-  background: rgba(255,255,255,0.22);
-  color: #fff;
+  color: rgba(75, 4, 4, 0.755);
+  background: #e99393;
 }
 
 /* ── Sync dialog ────────────────────────────────────────────── */
@@ -389,4 +389,3 @@ body.menu-open .rename-dialog * {
   gap: 0.5rem;
   margin: 0.9rem 0;
 }
-
