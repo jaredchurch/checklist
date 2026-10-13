@@ -1,5 +1,6 @@
 {
 	"image": "ghcr.io/jaredchurch/base:v3",
+	"postCreateCommand": "npm install -g vite",
 	"features": {
 		"./features/opencode": {},
 		"./features/gemini": {},
